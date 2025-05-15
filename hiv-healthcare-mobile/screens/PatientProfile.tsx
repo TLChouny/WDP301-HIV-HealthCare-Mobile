@@ -14,10 +14,20 @@ interface PatientData {
   dateOfBirth: string;
   gender: string;
   phoneNumber: string;
+  email: string;
+  address: string;
+  bloodType: string;
+  insuranceNumber: string;
+  insuranceProvider: string;
   emergencyContact: string;
+  emergencyPhone: string;
+  emergencyRelationship: string;
   medicalHistory: string;
   allergies: string;
   currentMedications: string;
+  chronicConditions: string;
+  lastCheckup: string;
+  nextAppointment: string;
 }
 
 const PatientProfile = () => {
@@ -26,10 +36,20 @@ const PatientProfile = () => {
     dateOfBirth: '',
     gender: '',
     phoneNumber: '',
+    email: '',
+    address: '',
+    bloodType: '',
+    insuranceNumber: '',
+    insuranceProvider: '',
     emergencyContact: '',
+    emergencyPhone: '',
+    emergencyRelationship: '',
     medicalHistory: '',
     allergies: '',
     currentMedications: '',
+    chronicConditions: '',
+    lastCheckup: '',
+    nextAppointment: '',
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -105,10 +125,116 @@ const PatientProfile = () => {
               keyboardType="phone-pad"
             />
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.email}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, email: text })
+              }
+              editable={isEditing}
+              keyboardType="email-address"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={patientData.address}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, address: text })
+              }
+              editable={isEditing}
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Insurance Information</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Insurance Provider</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.insuranceProvider}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, insuranceProvider: text })
+              }
+              editable={isEditing}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Insurance Number</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.insuranceNumber}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, insuranceNumber: text })
+              }
+              editable={isEditing}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Emergency Contact</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Contact Name</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.emergencyContact}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, emergencyContact: text })
+              }
+              editable={isEditing}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Contact Phone</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.emergencyPhone}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, emergencyPhone: text })
+              }
+              editable={isEditing}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Relationship</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.emergencyRelationship}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, emergencyRelationship: text })
+              }
+              editable={isEditing}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Medical Information</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Blood Type</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.bloodType}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, bloodType: text })
+              }
+              editable={isEditing}
+            />
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Medical History</Text>
             <TextInput
@@ -148,6 +274,46 @@ const PatientProfile = () => {
               editable={isEditing}
               multiline
               numberOfLines={4}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Chronic Conditions</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={patientData.chronicConditions}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, chronicConditions: text })
+              }
+              editable={isEditing}
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Last Checkup Date</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.lastCheckup}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, lastCheckup: text })
+              }
+              editable={isEditing}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Next Appointment</Text>
+            <TextInput
+              style={styles.input}
+              value={patientData.nextAppointment}
+              onChangeText={(text) =>
+                setPatientData({ ...patientData, nextAppointment: text })
+              }
+              editable={isEditing}
+              placeholder="YYYY-MM-DD"
             />
           </View>
         </View>

@@ -17,6 +17,16 @@ interface Medication {
   frequency: string;
   time: string;
   reminder: boolean;
+  prescriptionNumber: string;
+  prescribingDoctor: string;
+  startDate: string;
+  endDate: string;
+  sideEffects: string;
+  specialInstructions: string;
+  refillDate: string;
+  refillQuantity: string;
+  pharmacy: string;
+  notes: string;
 }
 
 const MedicationManagement = () => {
@@ -28,6 +38,16 @@ const MedicationManagement = () => {
     frequency: '',
     time: '',
     reminder: true,
+    prescriptionNumber: '',
+    prescribingDoctor: '',
+    startDate: '',
+    endDate: '',
+    sideEffects: '',
+    specialInstructions: '',
+    refillDate: '',
+    refillQuantity: '',
+    pharmacy: '',
+    notes: '',
   });
 
   const addMedication = () => {
@@ -43,6 +63,16 @@ const MedicationManagement = () => {
         frequency: '',
         time: '',
         reminder: true,
+        prescriptionNumber: '',
+        prescribingDoctor: '',
+        startDate: '',
+        endDate: '',
+        sideEffects: '',
+        specialInstructions: '',
+        refillDate: '',
+        refillQuantity: '',
+        pharmacy: '',
+        notes: '',
       });
     }
   };
@@ -116,6 +146,132 @@ const MedicationManagement = () => {
             />
           </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Prescription Number</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.prescriptionNumber}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, prescriptionNumber: text })
+              }
+              placeholder="Enter prescription number"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Prescribing Doctor</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.prescribingDoctor}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, prescribingDoctor: text })
+              }
+              placeholder="Enter doctor's name"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Start Date</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.startDate}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, startDate: text })
+              }
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>End Date</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.endDate}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, endDate: text })
+              }
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Side Effects</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={newMedication.sideEffects}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, sideEffects: text })
+              }
+              placeholder="Enter any side effects"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Special Instructions</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={newMedication.specialInstructions}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, specialInstructions: text })
+              }
+              placeholder="Enter special instructions"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Pharmacy</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.pharmacy}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, pharmacy: text })
+              }
+              placeholder="Enter pharmacy name"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Refill Date</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.refillDate}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, refillDate: text })
+              }
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Refill Quantity</Text>
+            <TextInput
+              style={styles.input}
+              value={newMedication.refillQuantity}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, refillQuantity: text })
+              }
+              placeholder="Enter refill quantity"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={newMedication.notes}
+              onChangeText={(text) =>
+                setNewMedication({ ...newMedication, notes: text })
+              }
+              placeholder="Enter any additional notes"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
           <TouchableOpacity style={styles.addButton} onPress={addMedication}>
             <Text style={styles.addButtonText}>Add Medication</Text>
           </TouchableOpacity>
@@ -142,6 +298,36 @@ const MedicationManagement = () => {
               </Text>
               <Text style={styles.medicationDetail}>
                 Time: {medication.time}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Prescription #: {medication.prescriptionNumber}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Doctor: {medication.prescribingDoctor}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Start Date: {medication.startDate}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                End Date: {medication.endDate}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Side Effects: {medication.sideEffects}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Instructions: {medication.specialInstructions}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Pharmacy: {medication.pharmacy}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Next Refill: {medication.refillDate}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Refill Quantity: {medication.refillQuantity}
+              </Text>
+              <Text style={styles.medicationDetail}>
+                Notes: {medication.notes}
               </Text>
               <View style={styles.reminderToggle}>
                 <Text style={styles.reminderText}>Reminder</Text>
@@ -207,6 +393,10 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
   addButton: {
     backgroundColor: '#007AFF',
