@@ -20,15 +20,15 @@ const Navigation = () => {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName: keyof typeof Ionicons.glyphMap;
 
-            if (route.name === 'Home') {
+            if (route.name === 'Trang chủ') {
               iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Profile') {
+            } else if (route.name === 'Hồ sơ') {
               iconName = focused ? 'person' : 'person-outline';
             } else if (route.name === 'Medications') {
               iconName = focused ? 'medical' : 'medical-outline';
-            } else if (route.name === 'Appointments') {
+            } else if (route.name === 'Đặt lịch') {
               iconName = focused ? 'calendar' : 'calendar-outline';
-            } else if (route.name === 'Doctors') {
+            } else if (route.name === 'Bác sĩ') {
               iconName = focused ? 'people' : 'people-outline';
             } else {
               iconName = 'home';
@@ -41,11 +41,11 @@ const Navigation = () => {
           headerShown: true,
         })}
       >
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Profile" component={PatientProfile} />
+        <Tab.Screen name="Trang chủ" component={Home} />
+        <Tab.Screen name="Hồ sơ" component={PatientProfile} />
         <Tab.Screen name="Medications" component={MedicationManagement} />
-        <Tab.Screen name="Appointments" component={Appointment} />
-        <Tab.Screen name="Doctors" component={Doctor} />
+        <Tab.Screen name="Đặt lịch" component={Appointment} />
+        <Tab.Screen name="Bác sĩ" component={Doctor} />
       </Tab.Navigator>
     </NavigationContainer>
   );

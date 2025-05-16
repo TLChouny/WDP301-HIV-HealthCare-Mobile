@@ -3,19 +3,19 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-
-interface Appointment {
-  id: string;
-  doctorName: string;
-  department: string;
-  date: Date;
-  time: string;
-  status: 'Pending' | 'Confirmed' | 'Cancelled';
-}
+import { Appointments } from "../types/appointment"
+// interface Appointment {
+//   id: string;
+//   doctorName: string;
+//   department: string;
+//   date: Date;
+//   time: string;
+//   status: 'Pending' | 'Confirmed' | 'Cancelled';
+// }
 
 export default function Appointment() {
   const navigation = useNavigation();
-  const [appointments] = useState<Appointment[]>([
+  const [appointments] = useState<Appointments[]>([
     {
       id: '1',
       doctorName: 'Dr. Nguyen Van A',
@@ -58,7 +58,7 @@ export default function Appointment() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <TouchableOpacity
             style={styles.bookButton}
-            onPress={() => navigation.navigate('AppointmentBooking')}
+            // onPress={() => navigation.navigate('AppointmentBooking')}
           >
             <Text style={styles.bookButtonText}>Book New Appointment</Text>
           </TouchableOpacity>

@@ -1,15 +1,9 @@
 // screens/Doctor.tsx
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, StyleSheet } from "react-native";
+import { Doctors } from "../types/doctor";
 
-interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  schedule: string;
-}
-
-const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
+const DoctorCard = ({ doctor }: { doctor: Doctors }) => (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>{doctor.name}</Text>
     <Text style={styles.cardDesc}>Chuyên môn: {doctor.specialty}</Text>
@@ -20,7 +14,7 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
 export default function Doctor() {
   const [search, setSearch] = useState<string>("");
 
-  const doctors: Doctor[] = [
+  const doctors: Doctors[] = [
     { id: "1", name: "BS. Nguyễn Văn A", specialty: "HIV/AIDS", schedule: "Thứ 2 - Thứ 6: 8:00 - 17:00" },
     { id: "2", name: "BS. Trần Thị B", specialty: "HIV/AIDS", schedule: "Thứ 3 - Thứ 7: 9:00 - 18:00" },
   ];
