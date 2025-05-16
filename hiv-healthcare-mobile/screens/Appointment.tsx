@@ -1,106 +1,215 @@
 // screens/Appointment.tsx
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import Toast from "react-native-toast-message";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+
+interface Appointment {
+  id: string;
+  doctorName: string;
+  department: string;
+  date: Date;
+  time: string;
+  status: 'Pending' | 'Confirmed' | 'Cancelled';
+}
 
 export default function Appointment() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<string>("");
-  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-
-  const doctors = [
-    { id: "1", name: "BS. Nguyễn Văn A", specialty: "HIV/AIDS", schedule: "Thứ 2-6" },
-    { id: "2", name: "BS. Trần Thị B", specialty: "HIV/AIDS", schedule: "Thứ 3-7" },
-  ];
-
-  const handleSubmit = () => {
-    if (!selectedDate || !selectedDoctor) {
-      Toast.show({
-        type: "error",
-        text1: "Lỗi",
-        text2: "Vui lòng chọn ngày khám và bác sĩ.",
-      });
-      return;
+  const navigation = useNavigation();
+  const [appointments] = useState<Appointment[]>([
+    {
+      id: '1',
+      doctorName: 'Dr. Nguyen Van A',
+      department: 'HIV/AIDS',
+      date: new Date(2024, 3, 15),
+      time: '09:00 AM',
+      status: 'Confirmed'
+    },
+    {
+      id: '2',
+      doctorName: 'Dr. Tran Thi B',
+      department: 'HIV/AIDS',
+      date: new Date(2024, 3, 20),
+      time: '02:30 PM',
+      status: 'Pending'
     }
-    Toast.show({
-      type: "success",
-      text1: "Thành công",
-      text2: "Đặt lịch thành công!",
-    });
-    console.log({ date: selectedDate, doctor: selectedDoctor, anonymous: isAnonymous });
+  ]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Confirmed':
+        return '#34C759';
+      case 'Pending':
+        return '#FFD700';
+      case 'Cancelled':
+        return '#FF3B30';
+      default:
+        return '#666';
+    }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Đặt Lịch Khám</Text>
-      <View style={styles.card}>
-        {/* Chọn ngày khám */}
-        <Text style={styles.label}>Chọn ngày khám</Text>
-        <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
-          style={styles.input}
-        >
-          <Text>{selectedDate ? selectedDate.toLocaleDateString() : "Chọn ngày"}</Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={selectedDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={(event, date) => {
-              setShowDatePicker(false);
-              if (date) setSelectedDate(date);
-            }}
-          />
-        )}
-
-        {/* Chọn bác sĩ */}
-        <Text style={styles.label}>Chọn bác sĩ</Text>
-        <View style={styles.input}>
-          {doctors.map((doctor) => (
-            <TouchableOpacity
-              key={doctor.id}
-              onPress={() => setSelectedDoctor(doctor.id)}
-              style={[
-                styles.doctorItem,
-                selectedDoctor === doctor.id && { backgroundColor: "rgba(37, 99, 235, 0.1)" },
-              ]}
-            >
-              <Text>{doctor.name} - {doctor.specialty}</Text>
-            </TouchableOpacity>
-          ))}
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>Appointments</Text>
         </View>
 
-        {/* Đăng ký ẩn danh */}
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity onPress={() => setIsAnonymous(!isAnonymous)}>
-            <View style={[styles.checkbox, isAnonymous && { backgroundColor: "#2563eb" }]} />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={() => navigation.navigate('AppointmentBooking')}
+          >
+            <Text style={styles.bookButtonText}>Book New Appointment</Text>
           </TouchableOpacity>
-          <Text style={styles.checkboxLabel}>Đăng ký ẩn danh</Text>
         </View>
 
-        {/* Nút đặt lịch */}
-        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-          <Text style={styles.buttonText}>Đặt Lịch</Text>
-        </TouchableOpacity>
-      </View>
-      <Toast />
-    </ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+          {appointments.length > 0 ? (
+            appointments.map((appointment) => (
+              <View key={appointment.id} style={styles.appointmentCard}>
+                <View style={styles.appointmentHeader}>
+                  <Text style={styles.appointmentTitle}>
+                    Dr. {appointment.doctorName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: getStatusColor(appointment.status) }
+                    ]}
+                  >
+                    {appointment.status}
+                  </Text>
+                </View>
+                <Text style={styles.appointmentDetail}>
+                  Department: {appointment.department}
+                </Text>
+                <Text style={styles.appointmentDetail}>
+                  Date: {appointment.date.toLocaleDateString()}
+                </Text>
+                <Text style={styles.appointmentDetail}>
+                  Time: {appointment.time}
+                </Text>
+                {appointment.status === 'Pending' && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      // Handle cancel appointment
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                No upcoming appointments. Book your first appointment now!
+              </Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f4f6", padding: 16 },
-  title: { fontSize: 24, fontWeight: "600", color: "#2563eb", textAlign: "center", marginBottom: 24 },
-  card: { backgroundColor: "#fff", padding: 24, borderRadius: 8, elevation: 2 },
-  label: { color: "#4b5563", fontWeight: "500", marginBottom: 8 },
-  input: { padding: 12, borderWidth: 1, borderColor: "#d1d5db", borderRadius: 8, marginBottom: 16 },
-  doctorItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
-  checkboxContainer: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  checkbox: { width: 20, height: 20, borderWidth: 1, borderColor: "#d1d5db", borderRadius: 4 },
-  checkboxLabel: { marginLeft: 8, color: "#4b5563" },
-  button: { backgroundColor: "#2563eb", paddingVertical: 12, borderRadius: 8 },
-  buttonText: { color: "#fff", textAlign: "center", fontWeight: "600" },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  section: {
+    backgroundColor: '#fff',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: '#333',
+  },
+  bookButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  appointmentCard: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  appointmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  appointmentTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  appointmentDetail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+    padding: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyState: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
 });
