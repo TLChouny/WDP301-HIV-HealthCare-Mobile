@@ -3,409 +3,205 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   TextInput,
+  ScrollView,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface PatientData {
-  fullName: string;
-  dateOfBirth: string;
-  gender: string;
-  phoneNumber: string;
-  email: string;
-  address: string;
-  bloodType: string;
-  insuranceNumber: string;
-  insuranceProvider: string;
-  emergencyContact: string;
-  emergencyPhone: string;
-  emergencyRelationship: string;
-  medicalHistory: string;
-  allergies: string;
-  currentMedications: string;
-  chronicConditions: string;
-  lastCheckup: string;
-  nextAppointment: string;
-}
+import { User } from '../types/User';
 
 const PatientProfile = () => {
-  const [patientData, setPatientData] = useState<PatientData>({
-    fullName: '',
-    dateOfBirth: '',
-    gender: '',
-    phoneNumber: '',
-    email: '',
-    address: '',
-    bloodType: '',
-    insuranceNumber: '',
-    insuranceProvider: '',
-    emergencyContact: '',
-    emergencyPhone: '',
-    emergencyRelationship: '',
-    medicalHistory: '',
-    allergies: '',
-    currentMedications: '',
-    chronicConditions: '',
-    lastCheckup: '',
-    nextAppointment: '',
+  const [user, setUser] = useState<User>({
+    userName: 'nguyenvana',
+    email: 'nguyenvana@example.com',
+    password: '123456',
+    phone_number: '0123456789',
+    gender: 'Nam',
+    address: '123 Đường ABC, Quận 1, TP.HCM',
+    role: 'user',
+    avatar: 'https://i.pravatar.cc/150?img=1',
+    categoryId: '',
+    userDescription: '',
+    otp: '',
+    otpExpires: '',
+    isVerified: true,
+    token: '',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+
+  const handleChange = (field: keyof User, value: string) => {
+    setUser({ ...user, [field]: value });
+  };
 
   const handleSave = () => {
-    // TODO: Implement save functionality
+    if (newPassword !== confirmPassword) {
+      alert('Mật khẩu không khớp!');
+      return;
+    }
+
+    const updatedUser: User = {
+      ...user,
+      password: newPassword || user.password, // Giữ nguyên nếu không đổi
+    };
+
+    setUser(updatedUser);
     setIsEditing(false);
+
+    // TODO: Gọi API để cập nhật dữ liệu người dùng
+    console.log('Thông tin cập nhật:', updatedUser);
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.title}>Patient Profile</Text>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => setIsEditing(!isEditing)}
-          >
-            <Text style={styles.editButtonText}>
-              {isEditing ? 'Cancel' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.avatarContainer}>
+          <Image source={{ uri: user.avatar }} style={styles.avatar} />
+          <Text style={styles.fullName}>{user.userName}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.fullName}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, fullName: text })
-              }
-              editable={isEditing}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date of Birth</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.dateOfBirth}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, dateOfBirth: text })
-              }
-              editable={isEditing}
-              placeholder="YYYY-MM-DD"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Gender</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.gender}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, gender: text })
-              }
-              editable={isEditing}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.phoneNumber}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, phoneNumber: text })
-              }
-              editable={isEditing}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.email}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, email: text })
-              }
-              editable={isEditing}
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Address</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={patientData.address}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, address: text })
-              }
-              editable={isEditing}
-              multiline
-              numberOfLines={2}
-            />
-          </View>
+          <Text style={styles.label}>Giới tính</Text>
+          <TextInput
+            style={styles.input}
+            value={user.gender}
+            editable={isEditing}
+            onChangeText={(text) => handleChange('gender', text)}
+          />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Insurance Information</Text>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Insurance Provider</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.insuranceProvider}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, insuranceProvider: text })
-              }
-              editable={isEditing}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Insurance Number</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.insuranceNumber}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, insuranceNumber: text })
-              }
-              editable={isEditing}
-            />
-          </View>
+          <Text style={styles.label}>Số điện thoại</Text>
+          <TextInput
+            style={styles.input}
+            value={user.phone_number}
+            editable={isEditing}
+            onChangeText={(text) => handleChange('phone_number', text)}
+            keyboardType="phone-pad"
+          />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Emergency Contact</Text>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Contact Name</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.emergencyContact}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, emergencyContact: text })
-              }
-              editable={isEditing}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Contact Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.emergencyPhone}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, emergencyPhone: text })
-              }
-              editable={isEditing}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Relationship</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.emergencyRelationship}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, emergencyRelationship: text })
-              }
-              editable={isEditing}
-            />
-          </View>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            value={user.email}
+            editable={isEditing}
+            onChangeText={(text) => handleChange('email', text)}
+            keyboardType="email-address"
+          />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Medical Information</Text>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Blood Type</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.bloodType}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, bloodType: text })
-              }
-              editable={isEditing}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Medical History</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={patientData.medicalHistory}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, medicalHistory: text })
-              }
-              editable={isEditing}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Allergies</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={patientData.allergies}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, allergies: text })
-              }
-              editable={isEditing}
-              multiline
-              numberOfLines={2}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Current Medications</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={patientData.currentMedications}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, currentMedications: text })
-              }
-              editable={isEditing}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Chronic Conditions</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={patientData.chronicConditions}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, chronicConditions: text })
-              }
-              editable={isEditing}
-              multiline
-              numberOfLines={2}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Last Checkup Date</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.lastCheckup}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, lastCheckup: text })
-              }
-              editable={isEditing}
-              placeholder="YYYY-MM-DD"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Next Appointment</Text>
-            <TextInput
-              style={styles.input}
-              value={patientData.nextAppointment}
-              onChangeText={(text) =>
-                setPatientData({ ...patientData, nextAppointment: text })
-              }
-              editable={isEditing}
-              placeholder="YYYY-MM-DD"
-            />
-          </View>
+          <Text style={styles.label}>Địa chỉ</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={user.address}
+            editable={isEditing}
+            onChangeText={(text) => handleChange('address', text)}
+            multiline
+            numberOfLines={3}
+          />
         </View>
-
         {isEditing && (
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
+          <>
+            <View style={styles.section}>
+              <Text style={styles.label}>Mật khẩu mới</Text>
+              <TextInput
+                style={styles.input}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Nhập mật khẩu mới"
+                secureTextEntry
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Xác nhận mật khẩu</Text>
+              <TextInput
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Nhập lại mật khẩu"
+                secureTextEntry
+              />
+            </View>
+          </>
         )}
+
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
+        >
+          <Text style={styles.buttonText}>{isEditing ? 'Lưu' : 'Chỉnh sửa'}</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+export default PatientProfile;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 24,
+  content: {
+    padding: 16,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 12,
+  },
+  fullName: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-  },
-  editButton: {
-    padding: 8,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontWeight: '600',
   },
   section: {
-    backgroundColor: '#fff',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333',
-  },
-  inputGroup: {
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    color: '#444',
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 10,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
   },
   textArea: {
-    height: 100,
+    minHeight: 60,
     textAlignVertical: 'top',
   },
-  saveButton: {
-    backgroundColor: '#34C759',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
+  button: {
+    marginTop: 24,
+    backgroundColor: '#0D9488',
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  saveButtonText: {
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
 });
-
-export default PatientProfile; 
