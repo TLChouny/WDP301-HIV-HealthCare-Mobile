@@ -1,312 +1,247 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, FlatList, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
-
-interface Appointment {
-  id: string;
-  doctorName: string;
-  department: string;
-  date: Date;
-  time: string;
-  reason: string;
-  symptoms: string;
-  priority: 'Normal' | 'Urgent';
-  status: 'Pending' | 'Confirmed' | 'Cancelled';
-}
+import { useAppointment } from '../contexts/AppointmentContext';
+import { Ionicons } from '@expo/vector-icons'; // Nếu bạn dùng Expo, hoặc dùng react-native-vector-icons
 
 const AppointmentBooking = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { addAppointment } = useAppointment();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
+  const [doctorValue, setDoctorValue] = useState('');
+  const [doctorItems] = useState([
+    { label: 'Nguyễn Văn A', value: 'Nguyễn Văn A' },
+    { label: 'Trần Thị B', value: 'Trần Thị B' },
+    { label: 'Lê Văn C', value: 'Lê Văn C' },
+  ]);
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
 
-  const [newAppointment, setNewAppointment] = useState<Partial<Appointment>>({
+  const [newAppointment, setNewAppointment] = useState({
     doctorName: '',
-    department: '',
     reason: '',
     symptoms: '',
-    priority: 'Normal',
-    status: 'Pending',
   });
 
+  // Handle date selection
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
-      setNewAppointment({ ...newAppointment, date });
     }
   };
 
+  // Handle time selection
   const handleTimeChange = (event: any, time?: Date) => {
     setShowTimePicker(false);
     if (time) {
-      const timeString = time.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      const timeString = time.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
       });
       setSelectedTime(timeString);
-      setNewAppointment({ ...newAppointment, time: timeString });
     }
   };
 
-  const handleBookAppointment = () => {
-    if (!newAppointment.doctorName || !newAppointment.department || !newAppointment.date || !newAppointment.time) {
+  // Book new appointment
+  const bookAppointment = () => {
+    const date = selectedDate;
+    const time = selectedTime;
+
+    if (!newAppointment.doctorName || !date || !time) {
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Please fill in all required fields',
+        text1: 'Lỗi',
+        text2: 'Vui lòng điền đầy đủ các trường bắt buộc',
       });
       return;
     }
 
-    const appointment: Appointment = {
+    addAppointment({
       id: Date.now().toString(),
-      doctorName: newAppointment.doctorName!,
-      department: newAppointment.department!,
-      date: newAppointment.date!,
-      time: newAppointment.time!,
-      reason: newAppointment.reason || '',
-      symptoms: newAppointment.symptoms || '',
-      priority: newAppointment.priority as 'Normal' | 'Urgent',
+      doctorName: newAppointment.doctorName,
+      date: date,
+      time: time,
+      reason: newAppointment.reason,
+      symptoms: newAppointment.symptoms,
       status: 'Pending',
-    };
+    });
 
-    setAppointments([...appointments, appointment]);
     setNewAppointment({
       doctorName: '',
-      department: '',
       reason: '',
       symptoms: '',
-      priority: 'Normal',
-      status: 'Pending',
     });
     setSelectedTime('');
 
     Toast.show({
       type: 'success',
-      text1: 'Success',
-      text2: 'Appointment booked successfully',
+      text1: 'Thành công',
+      text2: 'Đặt lịch thành công',
     });
-  };
-
-  const cancelAppointment = (id: string) => {
-    setAppointments(
-      appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: 'Cancelled' } : apt
-      )
-    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.title}>Book Appointment</Text>
+          <Text style={styles.title}>Đặt lịch khám</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>New Appointment</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Doctor Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={newAppointment.doctorName}
-              onChangeText={(text) =>
-                setNewAppointment({ ...newAppointment, doctorName: text })
-              }
-              placeholder="Enter doctor's name"
-            />
-          </View>
+          <Text style={styles.sectionTitle}>Tạo lịch hẹn mới</Text>
 
+          {/* Dropdown chọn bác sĩ */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Department *</Text>
-            <TextInput
-              style={styles.input}
-              value={newAppointment.department}
-              onChangeText={(text) =>
-                setNewAppointment({ ...newAppointment, department: text })
-              }
-              placeholder="Enter department"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date *</Text>
+            <Text style={styles.label}>Bác sĩ *</Text>
             <TouchableOpacity
-              style={styles.dateTimeButton}
-              onPress={() => setShowDatePicker(true)}
+              style={styles.dateTimeButtonCustom}
+              onPress={() => setShowDoctorModal(true)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.dateTimeButtonText}>
-                {selectedDate.toLocaleDateString()}
+              <Ionicons name="person-outline" size={20} color="#34C759" style={{ marginRight: 10 }} />
+              <Text style={[styles.dateTimeButtonText, !doctorValue && { color: '#aaa' }]}>
+                {doctorValue || 'Chọn bác sĩ'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Modal
+            visible={showDoctorModal}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowDoctorModal(false)}
+          >
+            <View style={{
+              flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center'
+            }}>
+              <View style={{
+                backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '80%'
+              }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn bác sĩ</Text>
+                <FlatList
+                  data={doctorItems}
+                  keyExtractor={item => item.value}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      style={{ paddingVertical: 12 }}
+                      onPress={() => {
+                        setDoctorValue(item.value);
+                        setNewAppointment({ ...newAppointment, doctorName: item.value });
+                        setShowDoctorModal(false);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16, color: doctorValue === item.value ? '#34C759' : '#222' }}>
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+                <TouchableOpacity onPress={() => setShowDoctorModal(false)} style={{ marginTop: 10 }}>
+                  <Text style={{ color: '#007AFF', textAlign: 'right' }}>Đóng</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Ngày khám *</Text>
+            <TouchableOpacity
+              style={[
+                styles.dateTimeButtonCustom,
+                showDatePicker && styles.dateTimeButtonActive
+              ]}
+              onPress={() => setShowDatePicker(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="calendar-outline" size={22} color="#34C759" style={{ marginRight: 10 }} />
+              <Text style={[
+                styles.dateTimeButtonText,
+                !selectedDate && { color: '#aaa' }
+              ]}>
+                {selectedDate ? selectedDate.toLocaleDateString() : 'Chọn ngày'}
               </Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
                 mode="date"
-                display="default"
+                display="spinner"
                 onChange={handleDateChange}
                 minimumDate={new Date()}
+                style={{ backgroundColor: '#fff' }}
               />
             )}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Time *</Text>
+            <Text style={styles.label}>Giờ khám *</Text>
             <TouchableOpacity
-              style={styles.dateTimeButton}
+              style={[
+                styles.dateTimeButtonCustom,
+                showTimePicker && styles.dateTimeButtonActive
+              ]}
               onPress={() => setShowTimePicker(true)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.dateTimeButtonText}>
-                {selectedTime || 'Select time'}
+              <Ionicons name="time-outline" size={22} color="#34C759" style={{ marginRight: 10 }} />
+              <Text style={[
+                styles.dateTimeButtonText,
+                !selectedTime && { color: '#aaa' }
+              ]}>
+                {selectedTime || 'Chọn giờ'}
               </Text>
             </TouchableOpacity>
             {showTimePicker && (
               <DateTimePicker
-                value={new Date()}
+                value={selectedDate}
                 mode="time"
-                display="default"
+                display="spinner"
                 onChange={handleTimeChange}
+                style={{ backgroundColor: '#fff' }}
               />
             )}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Reason for Visit</Text>
+            <Text style={styles.label}>Lý do khám</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={newAppointment.reason}
               onChangeText={(text) =>
                 setNewAppointment({ ...newAppointment, reason: text })
               }
-              placeholder="Enter reason for visit"
+              placeholder="Nhập lý do khám"
               multiline
               numberOfLines={3}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Symptoms</Text>
+            <Text style={styles.label}>Triệu chứng</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={newAppointment.symptoms}
               onChangeText={(text) =>
                 setNewAppointment({ ...newAppointment, symptoms: text })
               }
-              placeholder="Describe your symptoms"
+              placeholder="Nhập triệu chứng"
               multiline
               numberOfLines={3}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Priority</Text>
-            <View style={styles.priorityButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.priorityButton,
-                  newAppointment.priority === 'Normal' && styles.priorityButtonActive,
-                ]}
-                onPress={() =>
-                  setNewAppointment({ ...newAppointment, priority: 'Normal' })
-                }
-              >
-                <Text
-                  style={[
-                    styles.priorityButtonText,
-                    newAppointment.priority === 'Normal' && styles.priorityButtonTextActive,
-                  ]}
-                >
-                  Normal
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.priorityButton,
-                  newAppointment.priority === 'Urgent' && styles.priorityButtonActive,
-                ]}
-                onPress={() =>
-                  setNewAppointment({ ...newAppointment, priority: 'Urgent' })
-                }
-              >
-                <Text
-                  style={[
-                    styles.priorityButtonText,
-                    newAppointment.priority === 'Urgent' && styles.priorityButtonTextActive,
-                  ]}
-                >
-                  Urgent
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           <TouchableOpacity
             style={styles.bookButton}
-            onPress={handleBookAppointment}
+            onPress={bookAppointment}
           >
-            <Text style={styles.bookButtonText}>Book Appointment</Text>
+            <Text style={styles.bookButtonText}>Đặt lịch</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Appointments</Text>
-          {appointments.map((appointment) => (
-            <View key={appointment.id} style={styles.appointmentCard}>
-              <View style={styles.appointmentHeader}>
-                <Text style={styles.appointmentTitle}>
-                  Dr. {appointment.doctorName}
-                </Text>
-                <Text
-                  style={[
-                    styles.statusBadge,
-                    appointment.status === 'Confirmed' && styles.statusConfirmed,
-                    appointment.status === 'Cancelled' && styles.statusCancelled,
-                  ]}
-                >
-                  {appointment.status}
-                </Text>
-              </View>
-              <Text style={styles.appointmentDetail}>
-                Department: {appointment.department}
-              </Text>
-              <Text style={styles.appointmentDetail}>
-                Date: {appointment.date.toLocaleDateString()}
-              </Text>
-              <Text style={styles.appointmentDetail}>
-                Time: {appointment.time}
-              </Text>
-              <Text style={styles.appointmentDetail}>
-                Priority: {appointment.priority}
-              </Text>
-              {appointment.reason && (
-                <Text style={styles.appointmentDetail}>
-                  Reason: {appointment.reason}
-                </Text>
-              )}
-              {appointment.status === 'Pending' && (
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => cancelAppointment(appointment.id)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -367,39 +302,31 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  dateTimeButton: {
+  dateTimeButtonCustom: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
+    borderColor: '#34C759',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#f6fff8',
+    marginBottom: 4,
+    shadowColor: '#34C759',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  dateTimeButtonActive: {
+    borderColor: '#007AFF',
+    backgroundColor: '#e6f0ff',
   },
   dateTimeButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  priorityButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  priorityButton: {
+    fontSize: 17,
+    color: '#222',
+    fontWeight: '500',
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'center',
-  },
-  priorityButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  priorityButtonText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  priorityButtonTextActive: {
-    color: '#fff',
+    textAlign: 'left',
   },
   bookButton: {
     backgroundColor: '#34C759',
@@ -464,6 +391,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    minHeight: 36,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    marginTop: 2,
+    marginBottom: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  picker: {
+    height: 36,
+    minHeight: 36,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: 'transparent',
+    width: '100%',
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: 36,
+  },
 });
 
-export default AppointmentBooking; 
+export default AppointmentBooking;
