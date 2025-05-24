@@ -1,38 +1,17 @@
 // screens/Appointment.tsx
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Appointments } from "../types/appointment"
-// interface Appointment {
-//   id: string;
-//   doctorName: string;
-//   department: string;
-//   date: Date;
-//   time: string;
-//   status: 'Pending' | 'Confirmed' | 'Cancelled';
-// }
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useAppointment } from '../contexts/AppointmentContext';
+
+type RootStackParamList = {
+  AppointmentBooking: undefined;
+};
 
 export default function Appointment() {
-  const navigation = useNavigation();
-  const [appointments] = useState<Appointments[]>([
-    {
-      id: '1',
-      doctorName: 'Dr. Nguyen Van A',
-      department: 'HIV/AIDS',
-      date: new Date(2024, 3, 15),
-      time: '09:00 AM',
-      status: 'Confirmed'
-    },
-    {
-      id: '2',
-      doctorName: 'Dr. Tran Thi B',
-      department: 'HIV/AIDS',
-      date: new Date(2024, 3, 20),
-      time: '02:30 PM',
-      status: 'Pending'
-    }
-  ]);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { appointments, cancelAppointment } = useAppointment();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,31 +26,46 @@ export default function Appointment() {
     }
   };
 
+  const handleCancel = (id: string) => {
+    Alert.alert(
+      "Hủy lịch hẹn",
+      "Bạn có chắc chắn muốn hủy lịch hẹn này?",
+      [
+        { text: "Không", style: "cancel" },
+        {
+          text: "Có",
+          style: "destructive",
+          onPress: () => cancelAppointment(id)
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.title}>Appointments</Text>
+          <Text style={styles.title}>Lịch hẹn</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
           <TouchableOpacity
             style={styles.bookButton}
-            // onPress={() => navigation.navigate('AppointmentBooking')}
+            onPress={() => navigation.navigate('AppointmentBooking')}
           >
-            <Text style={styles.bookButtonText}>Book New Appointment</Text>
+            <Text style={styles.bookButtonText}>Đặt lịch mới</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+          <Text style={styles.sectionTitle}>Lịch hẹn sắp tới</Text>
           {appointments.length > 0 ? (
             appointments.map((appointment) => (
               <View key={appointment.id} style={styles.appointmentCard}>
                 <View style={styles.appointmentHeader}>
                   <Text style={styles.appointmentTitle}>
-                    Dr. {appointment.doctorName}
+                    {appointment.doctorName}
                   </Text>
                   <Text
                     style={[
@@ -83,30 +77,36 @@ export default function Appointment() {
                   </Text>
                 </View>
                 <Text style={styles.appointmentDetail}>
-                  Department: {appointment.department}
+                  Ngày: {appointment.date.toLocaleDateString()}
                 </Text>
                 <Text style={styles.appointmentDetail}>
-                  Date: {appointment.date.toLocaleDateString()}
+                  Giờ: {appointment.time}
                 </Text>
                 <Text style={styles.appointmentDetail}>
-                  Time: {appointment.time}
+                  Lý do: {appointment.reason}
+                </Text>
+                <Text style={styles.appointmentDetail}>
+                  Triệu chứng: {appointment.symptoms}
                 </Text>
                 {appointment.status === 'Pending' && (
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => {
-                      // Handle cancel appointment
-                    }}
+                    onPress={() => handleCancel(appointment.id)}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                    <Text style={styles.cancelButtonText}>Hủy lịch</Text>
                   </TouchableOpacity>
+                )}
+                {appointment.status === 'Cancelled' && (
+                  <Text style={{ color: '#FF3B30', marginTop: 8, fontWeight: 'bold' }}>
+                    Lịch hẹn này đã bị hủy.
+                  </Text>
                 )}
               </View>
             ))
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>
-                No upcoming appointments. Book your first appointment now!
+                Bạn chưa có lịch hẹn nào. Hãy đặt lịch ngay!
               </Text>
             </View>
           )}
