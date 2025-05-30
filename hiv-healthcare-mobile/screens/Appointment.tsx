@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   AppointmentBooking: undefined;
+  OnlineConsultation: undefined;
 };
 
 export default function Appointment() {
@@ -55,7 +56,13 @@ export default function Appointment() {
             style={styles.bookButton}
             onPress={() => navigation.navigate('AppointmentBooking')}
           >
-            <Text style={styles.bookButtonText}>Đặt lịch mới</Text>
+            <Text style={styles.bookButtonText}>Đặt lịch khám</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bookButton, { marginTop: 12, backgroundColor: '#0D9488' }]}
+            onPress={() => navigation.navigate('OnlineConsultation')}
+          >
+            <Text style={styles.bookButtonText}>Tư vấn trực tuyến</Text>
           </TouchableOpacity>
         </View>
 
