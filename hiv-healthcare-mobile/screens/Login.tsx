@@ -11,14 +11,8 @@ import Icon from "react-native-vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
+import { RootStackParamList } from "../components/Navigation";
 
-// Navigation types
-type RootStackParamList = {
-  Home: undefined;
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
-};
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Screen dimensions
@@ -30,17 +24,7 @@ const Login: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
 
   const handleSubmit = () => {
-    // TODO: Thêm logic xử lý đăng nhập (ví dụ: gọi API)
-    if (email && password) {
-      Toast.show({
-        type: "success",
-        text1: "Đăng nhập thành công!",
-        position: "top",
-        autoHide: true,
-        visibilityTime: 3000,
-      });
-      navigation.navigate("Home");
-    } else {
+    if (!email || !password) {
       Toast.show({
         type: "error",
         text1: "Vui lòng điền đầy đủ thông tin!",
@@ -48,7 +32,18 @@ const Login: React.FC = () => {
         autoHide: true,
         visibilityTime: 3000,
       });
+      return;
     }
+
+    // TODO: Thêm logic xử lý đăng nhập (ví dụ: gọi API)
+    Toast.show({
+      type: "success",
+      text1: "Đăng nhập thành công!",
+      position: "top",
+      autoHide: true,
+      visibilityTime: 3000,
+    });
+    navigation.navigate("MainTabs");
   };
 
   return (
@@ -92,14 +87,11 @@ const Login: React.FC = () => {
                 <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-              <Text style={styles.optionText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
           </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>Đăng Nhập</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Đăng Nhập</Text>
+          </TouchableOpacity>
 
           <View style={styles.registerLinkContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>
