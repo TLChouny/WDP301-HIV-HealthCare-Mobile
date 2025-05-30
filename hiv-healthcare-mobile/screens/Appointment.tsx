@@ -4,6 +4,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useAppointment } from '../contexts/AppointmentContext';
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   AppointmentBooking: undefined;

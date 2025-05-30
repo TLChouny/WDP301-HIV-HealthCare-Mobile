@@ -7,8 +7,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 import { useAppointment } from '../contexts/AppointmentContext';
 import { Ionicons } from '@expo/vector-icons'; // Nếu bạn dùng Expo, hoặc dùng react-native-vector-icons
+import { useNavigation } from '@react-navigation/native';
 
 const AppointmentBooking = () => {
+  const navigation = useNavigation();
   const { addAppointment } = useAppointment();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -90,6 +92,12 @@ const AppointmentBooking = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
           <Text style={styles.title}>Đặt lịch khám</Text>
         </View>
 
@@ -256,6 +264,11 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 16,
   },
   title: {
     fontSize: 24,
