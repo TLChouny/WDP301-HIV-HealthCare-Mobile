@@ -10,10 +10,25 @@ import PatientProfile from '../screens/PatientProfile';
 import MedicationManagement from '../screens/MedicationManagement';
 import Appointment from '../screens/Appointment';
 import Doctor from '../screens/Doctor';
-import AppointmentBooking from '../screens/AppointmentBooking'; // Thêm dòng này
+import AppointmentBooking from '../screens/AppointmentBooking';
+import Login from '../screens/Login';
+import Register from '../screens/Register';
 
-const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+// Define types for navigation
+export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  MainTabs: undefined;
+  AppointmentBooking: undefined;
+  Home: undefined;
+  PatientProfile: undefined;
+  MedicationManagement: undefined;
+  Appointment: undefined;
+  Doctor: undefined;
+};
+
+const Tab = createBottomTabNavigator<RootStackParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
 
 function TabNavigator() {
   return (
@@ -21,11 +36,11 @@ function TabNavigator() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
-          if (route.name === 'Trang chủ') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Hồ sơ') iconName = focused ? 'person' : 'person-outline';
-          else if (route.name === 'Medications') iconName = focused ? 'medical' : 'medical-outline';
-          else if (route.name === 'Đặt lịch') iconName = focused ? 'calendar' : 'calendar-outline';
-          else if (route.name === 'Bác sĩ') iconName = focused ? 'people' : 'people-outline';
+          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'PatientProfile') iconName = focused ? 'person' : 'person-outline';
+          else if (route.name === 'MedicationManagement') iconName = focused ? 'medical' : 'medical-outline';
+          else if (route.name === 'Appointment') iconName = focused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Doctor') iconName = focused ? 'people' : 'people-outline';
           else iconName = 'home';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -34,11 +49,11 @@ function TabNavigator() {
         headerShown: true,
       })}
     >
-      <Tab.Screen name="Trang chủ" component={Home} />
-      <Tab.Screen name="Hồ sơ" component={PatientProfile} />
-      <Tab.Screen name="Medications" component={MedicationManagement} />
-      <Tab.Screen name="Đặt lịch" component={Appointment} />
-      <Tab.Screen name="Bác sĩ" component={Doctor} />
+      <Tab.Screen name="Home" component={Home} options={{ title: 'Trang chủ' }} />
+      <Tab.Screen name="PatientProfile" component={PatientProfile} options={{ title: 'Hồ sơ' }} />
+      <Tab.Screen name="MedicationManagement" component={MedicationManagement} options={{ title: 'Thuốc' }} />
+      <Tab.Screen name="Appointment" component={Appointment} options={{ title: 'Đặt lịch' }} />
+      <Tab.Screen name="Doctor" component={Doctor} options={{ title: 'Bác sĩ' }} />
     </Tab.Navigator>
   );
 }
@@ -46,7 +61,15 @@ function TabNavigator() {
 const Navigation = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator 
+        initialRouteName="Login"
+        screenOptions={{ 
+          headerShown: false,
+          cardStyle: { backgroundColor: '#fff' }
+        }}
+      >
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />
       </Stack.Navigator>
