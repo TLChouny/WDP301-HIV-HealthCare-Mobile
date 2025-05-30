@@ -13,6 +13,7 @@ import Doctor from '../screens/Doctor';
 import AppointmentBooking from '../screens/AppointmentBooking';
 import Login from '../screens/Login';
 import Register from '../screens/Register';
+import OnlineConsultation from '../screens/OnlineConsultation';
 
 // Define types for navigation
 export type RootStackParamList = {
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Register: undefined;
   MainTabs: undefined;
   AppointmentBooking: undefined;
+  OnlineConsultation: undefined;
   Home: undefined;
   PatientProfile: undefined;
   MedicationManagement: undefined;
@@ -72,6 +74,7 @@ const Navigation = () => {
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />
+        <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
       </Stack.Navigator>
     </NavigationContainer>
   );
