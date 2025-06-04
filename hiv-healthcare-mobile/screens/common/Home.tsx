@@ -152,6 +152,13 @@ const StaggerContainer: React.FC<StaggerContainerProps> = ({
   );
 };
 
+// Update image imports to use correct paths
+const images = {
+  doctor: require('../../assets/doingubacsi.png'),
+  doctor2: require('../../assets/doingubacsi2.png'),
+  // Add other images here if needed
+};
+
 // Main Home component
 const Home: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -246,7 +253,7 @@ const Home: React.FC = () => {
             </AnimatedElement>
             <AnimatedElement animationType="fade-left" delay={300} duration={1000}>
               <Image
-                source={require('../assets/doingubacsi.png')}
+                source={images.doctor}
                 style={styles.heroImage}
                 resizeMode="cover"
                 onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
@@ -304,7 +311,7 @@ const Home: React.FC = () => {
           <View style={styles.homeCareContent}>
             <AnimatedElement animationType="fade-right" duration={1000}>
               <Image
-                source={require('../assets/doingubacsi2.png')}
+                source={images.doctor2}
                 style={styles.homeCareImage}
                 resizeMode="cover"
                 onError={(e) => console.log('Image load error:', e.nativeEvent.error)}

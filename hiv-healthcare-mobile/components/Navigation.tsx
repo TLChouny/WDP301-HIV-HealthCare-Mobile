@@ -5,15 +5,16 @@ import { NavigationContainer } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
-import Home from '../screens/Home';
-import PatientProfile from '../screens/PatientProfile';
-import MedicationManagement from '../screens/MedicationManagement';
-import Appointment from '../screens/Appointment';
-import Doctor from '../screens/Doctor';
-import AppointmentBooking from '../screens/AppointmentBooking';
-import Login from '../screens/Login';
-import Register from '../screens/Register';
-import OnlineConsultation from '../screens/OnlineConsultation';
+import Home from '../screens/common/Home';
+import PatientProfile from '../screens/patient/PatientProfile';
+import MedicationManagement from '../screens/medical/MedicationManagement';
+import Appointment from '../screens/appointment/Appointment';
+import Doctor from '../screens/doctor/Doctor';
+import AppointmentBooking from '../screens/appointment/AppointmentBooking';
+import Login from '../screens/auth/Login';
+import Register from '../screens/auth/Register';
+import OnlineConsultation from '../screens/appointment/OnlineConsultation';
+import MedicalRecords from '../screens/medical/MedicalRecords';
 
 // Define types for navigation
 export type RootStackParamList = {
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   AppointmentBooking: undefined;
   OnlineConsultation: undefined;
+  MedicalRecords: undefined;
   Home: undefined;
   PatientProfile: undefined;
   MedicationManagement: undefined;
@@ -75,6 +77,7 @@ const Navigation = () => {
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />
         <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
+        <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
       </Stack.Navigator>
     </NavigationContainer>
   );
