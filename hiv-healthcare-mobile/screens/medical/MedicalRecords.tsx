@@ -12,9 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../components/Navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const MedicalRecords = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const [activeTab, setActiveTab] = useState('history');
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const [insuranceInfo, setInsuranceInfo] = useState({
@@ -154,6 +158,12 @@ const MedicalRecords = () => {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title}>Hồ sơ y tế</Text>
+        <TouchableOpacity 
+          style={styles.medicationButton}
+          onPress={() => navigation.navigate('MedicationManagement')}
+        >
+          <Ionicons name="medkit-outline" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabContainer}>
@@ -411,6 +421,9 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#fff',
+  },
+  medicationButton: {
+    padding: 8,
   },
 });
 
