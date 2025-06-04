@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
@@ -13,74 +13,96 @@ import Doctor from '../screens/doctor/Doctor';
 import AppointmentBooking from '../screens/appointment/AppointmentBooking';
 import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
+import ForgotPassword from '../screens/auth/ForgotPassword';
 import OnlineConsultation from '../screens/appointment/OnlineConsultation';
 import MedicalRecords from '../screens/medical/MedicalRecords';
 
-// Define types for navigation
+// Define navigation types
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  MainTabs: undefined;
+  ForgotPassword: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
+  Appointment: undefined;
   AppointmentBooking: undefined;
   OnlineConsultation: undefined;
   MedicalRecords: undefined;
-  Home: undefined;
   PatientProfile: undefined;
-  MedicationManagement: undefined;
-  Appointment: undefined;
-  Doctor: undefined;
 };
 
-const Tab = createBottomTabNavigator<RootStackParamList>();
-const Stack = createStackNavigator<RootStackParamList>();
+export type MainTabParamList = {
+  Home: undefined;
+  Appointment: undefined;
+  MedicalRecords: undefined;
+  Profile: undefined;
+};
 
-function TabNavigator() {
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+};
+
+// Create navigators
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const AuthStack = createStackNavigator<AuthStackParamList>();
+
+// Main Tab Navigator
+const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'PatientProfile') iconName = focused ? 'person' : 'person-outline';
-          else if (route.name === 'MedicationManagement') iconName = focused ? 'medical' : 'medical-outline';
-          else if (route.name === 'Appointment') iconName = focused ? 'calendar' : 'calendar-outline';
-          else if (route.name === 'Doctor') iconName = focused ? 'people' : 'people-outline';
-          else iconName = 'home';
-          return <Ionicons name={iconName} size={size} color={color} />;
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Appointment') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'MedicalRecords') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+
+          return <Ionicons name={iconName as any} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#0D9488',
         tabBarInactiveTintColor: 'gray',
-        headerShown: true,
       })}
     >
-      <Tab.Screen name="Home" component={Home} options={{ title: 'Trang chủ' }} />
-      <Tab.Screen name="PatientProfile" component={PatientProfile} options={{ title: 'Hồ sơ' }} />
-      <Tab.Screen name="MedicationManagement" component={MedicationManagement} options={{ title: 'Thuốc' }} />
-      <Tab.Screen name="Appointment" component={Appointment} options={{ title: 'Đặt lịch' }} />
-      <Tab.Screen name="Doctor" component={Doctor} options={{ title: 'Bác sĩ' }} />
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Appointment" component={Appointment} />
+      <Tab.Screen name="MedicalRecords" component={MedicalRecords} />
+      <Tab.Screen name="Profile" component={PatientProfile} />
     </Tab.Navigator>
   );
-}
+};
 
-const Navigation = () => {
+// Auth Stack Navigator
+const AuthStackNavigator = () => {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Login" component={Login} />
+      <AuthStack.Screen name="Register" component={Register} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPassword} />
+    </AuthStack.Navigator>
+  );
+};
+
+// Root Navigator
+export const Navigation = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator 
-        initialRouteName="Login"
-        screenOptions={{ 
-          headerShown: false,
-          cardStyle: { backgroundColor: '#fff' }
-        }}
-      >
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={AuthStackNavigator} />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />
         <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
         <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
+        <Stack.Screen name="PatientProfile" component={PatientProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
-
-export default Navigation;
