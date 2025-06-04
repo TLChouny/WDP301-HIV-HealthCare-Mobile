@@ -10,8 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User } from '../types/User';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { RootStackParamList } from '../components/Navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const PatientProfile = () => {
+  const navigation = useNavigation<NavigationProp>();
   const [user, setUser] = useState<User>({
     userName: 'nguyenvana',
     email: 'nguyenvana@example.com',
@@ -35,7 +42,6 @@ const PatientProfile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-
   const handleChange = (field: keyof User, value: string) => {
     setUser({ ...user, [field]: value });
   };
@@ -48,7 +54,7 @@ const PatientProfile = () => {
 
     const updatedUser: User = {
       ...user,
-      password: newPassword || user.password, // Giữ nguyên nếu không đổi
+      password: newPassword || user.password,
     };
 
     setUser(updatedUser);
@@ -57,7 +63,6 @@ const PatientProfile = () => {
     // TODO: Gọi API để cập nhật dữ liệu người dùng
     console.log('Thông tin cập nhật:', updatedUser);
   };
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,6 +115,7 @@ const PatientProfile = () => {
             numberOfLines={3}
           />
         </View>
+
         {isEditing && (
           <>
             <View style={styles.section}>
@@ -136,12 +142,19 @@ const PatientProfile = () => {
           </>
         )}
 
-
         <TouchableOpacity
           style={styles.button}
           onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
         >
           <Text style={styles.buttonText}>{isEditing ? 'Lưu' : 'Chỉnh sửa'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.medicalRecordsButton]}
+          onPress={() => navigation.navigate('MedicalRecords')}
+        >
+          <Ionicons name="medical-outline" size={24} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Hồ sơ y tế</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -198,6 +211,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  medicalRecordsButton: {
+    backgroundColor: '#007AFF',
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
   buttonText: {
     color: '#fff',

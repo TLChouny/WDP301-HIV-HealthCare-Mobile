@@ -1,18 +1,33 @@
 // screens/Appointment.tsx
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/Feather';
+import { useAppointment, AppointmentType } from '../../contexts/AppointmentContext';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { useAppointment } from '../contexts/AppointmentContext';
 import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
+  Appointment: undefined;
   AppointmentBooking: undefined;
   OnlineConsultation: undefined;
 };
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function Appointment() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp>();
   const { appointments, cancelAppointment } = useAppointment();
 
   const getStatusColor = (status: string) => {
