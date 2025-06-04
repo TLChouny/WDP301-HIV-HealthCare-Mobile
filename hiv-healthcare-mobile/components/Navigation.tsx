@@ -25,6 +25,7 @@ export type RootStackParamList = {
   OnlineConsultation: undefined;
   MedicalRecords: undefined;
   PatientProfile: undefined;
+  MedicationManagement: undefined;
 };
 
 export type MainTabParamList = {
@@ -32,6 +33,7 @@ export type MainTabParamList = {
   Appointment: undefined;
   MedicalRecords: undefined;
   Profile: undefined;
+  MedicationManagement: undefined;
 };
 
 export type AuthStackParamList = {
@@ -61,6 +63,8 @@ const MainTabNavigator = () => {
             iconName = focused ? 'document-text' : 'document-text-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'MedicationManagement') {
+            iconName = focused ? 'medkit' : 'medkit-outline';
           }
 
           return <Ionicons name={iconName as any} size={size} color={color} />;
@@ -72,6 +76,7 @@ const MainTabNavigator = () => {
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Appointment" component={Appointment} />
       <Tab.Screen name="MedicalRecords" component={MedicalRecords} />
+      <Tab.Screen name="MedicationManagement" component={MedicationManagement} />
       <Tab.Screen name="Profile" component={PatientProfile} />
     </Tab.Navigator>
   );
@@ -99,6 +104,7 @@ export const Navigation = () => {
         <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
         <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
         <Stack.Screen name="PatientProfile" component={PatientProfile} />
+        <Stack.Screen name="MedicationManagement" component={MedicationManagement} />
       </Stack.Navigator>
     </NavigationContainer>
   );
