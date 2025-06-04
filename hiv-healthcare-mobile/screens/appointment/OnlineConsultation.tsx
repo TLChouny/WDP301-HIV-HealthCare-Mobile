@@ -16,7 +16,7 @@ import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from '../components/Navigation';
+import { RootStackParamList } from '../../components/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
