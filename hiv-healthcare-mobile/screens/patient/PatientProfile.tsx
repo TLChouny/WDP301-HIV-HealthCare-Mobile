@@ -9,11 +9,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User } from '../types/User';
+import { User } from '../../types/User';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from '../components/Navigation';
+import { RootStackParamList } from '../../components/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
