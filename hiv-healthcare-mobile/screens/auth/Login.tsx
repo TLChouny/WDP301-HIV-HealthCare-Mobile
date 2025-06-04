@@ -11,7 +11,7 @@ import Icon from "react-native-vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
-import { RootStackParamList } from "../components/Navigation";
+import { RootStackParamList } from "../../components/Navigation";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -43,66 +43,66 @@ const Login: React.FC = () => {
       autoHide: true,
       visibilityTime: 3000,
     });
-    navigation.navigate("MainTabs");
+    navigation.navigate("MainTabs" as never);
   };
 
   return (
     <View style={styles.container}>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Đăng Nhập</Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập email của bạn..."
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <Icon name="mail" size={20} color="#9CA3AF" style={styles.inputIcon} />
-            </View>
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Đăng Nhập</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập email của bạn..."
+              placeholderTextColor="#9CA3AF"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Icon name="mail" size={20} color="#9CA3AF" style={styles.inputIcon} />
           </View>
+        </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Mật khẩu</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập mật khẩu..."
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-              <Icon name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
-            </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Mật khẩu</Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập mật khẩu..."
+              placeholderTextColor="#9CA3AF"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+            <Icon name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
           </View>
+        </View>
 
-          <View style={styles.optionsContainer}>
-            <View style={styles.rememberMe}>
-              <TouchableOpacity>
-                <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Đăng Nhập</Text>
-          </TouchableOpacity>
-
-          <View style={styles.registerLinkContainer}>
-            <Text style={styles.registerText}>Chưa có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <View style={styles.registerLink}>
-                <Text style={styles.registerLinkText}>Đăng ký ngay</Text>
-                <Icon name="arrow-right" size={16} color="#0D9488" />
-              </View>
+        <View style={styles.optionsContainer}>
+          <View style={styles.rememberMe}>
+            <TouchableOpacity>
+              <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Đăng Nhập</Text>
+        </TouchableOpacity>
+
+        <View style={styles.registerLinkContainer}>
+          <Text style={styles.registerText}>Chưa có tài khoản? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Register" as never)}>
+            <View style={styles.registerLink}>
+              <Text style={styles.registerLinkText}>Đăng ký ngay</Text>
+              <Icon name="arrow-right" size={16} color="#0D9488" />
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
