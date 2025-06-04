@@ -20,10 +20,7 @@ import MedicalRecords from '../screens/medical/MedicalRecords';
 // Define navigation types
 export type RootStackParamList = {
   Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
-  Appointment: undefined;
   AppointmentBooking: undefined;
   OnlineConsultation: undefined;
   MedicalRecords: undefined;
