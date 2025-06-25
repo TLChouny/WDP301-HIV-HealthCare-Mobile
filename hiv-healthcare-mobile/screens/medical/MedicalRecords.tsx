@@ -21,12 +21,8 @@ const MedicalRecords = () => {
   const navigation = useNavigation<NavigationProp>();
   const [activeTab, setActiveTab] = useState('history');
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
-  const [insuranceInfo, setInsuranceInfo] = useState({
-    insuranceNumber: '',
-    insuranceType: '',
-    expiryDate: '',
-    hospital: '',
-  });
+
+  
 
   // Mock data - In real app, this would come from an API
   const medicalHistory = [
@@ -45,18 +41,6 @@ const MedicalRecords = () => {
       diagnosis: 'Cao huyết áp',
       treatment: 'Thuốc huyết áp',
       followUp: '2024-03-28',
-    },
-  ];
-
-  const prescriptions = [
-    {
-      id: '1',
-      date: '2024-03-15',
-      doctor: 'BS. Nguyễn Văn A',
-      medications: [
-        { name: 'Amoxicillin 500mg', dosage: '1 viên x 3 lần/ngày', duration: '7 ngày' },
-        { name: 'Paracetamol 500mg', dosage: '1 viên khi sốt', duration: '3 ngày' },
-      ],
     },
   ];
 
@@ -90,27 +74,6 @@ const MedicalRecords = () => {
     </View>
   );
 
-  const renderPrescriptions = () => (
-    <View style={styles.section}>
-      {prescriptions.map((prescription) => (
-        <View key={prescription.id} style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.date}>{prescription.date}</Text>
-            <Text style={styles.doctor}>{prescription.doctor}</Text>
-          </View>
-          <Text style={styles.label}>Đơn thuốc:</Text>
-          {prescription.medications.map((med, index) => (
-            <View key={index} style={styles.medicationItem}>
-              <Text style={styles.medicationName}>{med.name}</Text>
-              <Text style={styles.medicationDosage}>Liều dùng: {med.dosage}</Text>
-              <Text style={styles.medicationDuration}>Thời gian: {med.duration}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-
   const renderDiagnosisResults = () => (
     <View style={styles.section}>
       {diagnosisResults.map((result) => (
@@ -135,9 +98,7 @@ const MedicalRecords = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
+        
         <Text style={styles.title}>Hồ sơ y tế</Text>
         <TouchableOpacity 
           style={styles.medicationButton}
@@ -157,14 +118,6 @@ const MedicalRecords = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'prescriptions' && styles.activeTab]}
-          onPress={() => setActiveTab('prescriptions')}
-        >
-          <Text style={[styles.tabText, activeTab === 'prescriptions' && styles.activeTabText]}>
-            Đơn thuốc
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === 'results' && styles.activeTab]}
           onPress={() => setActiveTab('results')}
         >
@@ -172,18 +125,12 @@ const MedicalRecords = () => {
             Kết quả
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'insurance' && styles.activeTab]}
-          onPress={() => setActiveTab('insurance')}
-        >
-        </TouchableOpacity>
+        
       </View>
 
       <ScrollView style={styles.content}>
         {activeTab === 'history' && renderMedicalHistory()}
-        {activeTab === 'prescriptions' && renderPrescriptions()}
         {activeTab === 'results' && renderDiagnosisResults()}
-     
       </ScrollView>
 
       <Modal
@@ -201,105 +148,124 @@ const MedicalRecords = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F4F8FB',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'center',
+    paddingTop: 24,
+    paddingBottom: 16,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginLeft: 16,
+    color: '#0D9488',
+    textAlign: 'center',
+    flex: 1,
+  },
+  medicationButton: {
+    position: 'absolute',
+    right: 20,
+    top: 24,
+    padding: 8,
+    backgroundColor: '#E0F2F1',
+    borderRadius: 8,
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    padding: 8,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginTop: 18,
+    marginBottom: 10,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 13,
     alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F4F8FB',
+    marginHorizontal: 4,
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
+    backgroundColor: '#0D9488',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
     color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
   },
   activeTabText: {
-    color: '#007AFF',
-    fontWeight: '600',
+    color: '#fff',
+    fontWeight: '700',
   },
   content: {
     flex: 1,
+    paddingHorizontal: 8,
   },
   section: {
-    padding: 16,
+    padding: 10,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E0E7EF',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   date: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#64748B',
+    fontWeight: '500',
   },
   doctor: {
-    fontSize: 14,
-    color: '#007AFF',
+    fontSize: 15,
+    color: '#0D9488',
     fontWeight: '600',
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: '#475569',
     marginTop: 8,
+    fontWeight: '500',
   },
   contentText: {
     fontSize: 16,
-    color: '#333',
-    marginTop: 4,
-  },
-  medicationItem: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-  },
-  medicationName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  medicationDosage: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  medicationDuration: {
-    fontSize: 14,
-    color: '#666',
+    color: '#222',
     marginTop: 2,
+    fontWeight: '400',
   },
   sectionTitle: {
     fontSize: 18,
@@ -354,9 +320,6 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#fff',
-  },
-  medicationButton: {
-    padding: 8,
   },
 });
 
