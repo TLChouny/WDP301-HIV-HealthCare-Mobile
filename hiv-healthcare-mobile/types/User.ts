@@ -1,18 +1,21 @@
 export type User = {
+  _id: string;
   userName: string;
-  email: string;
-  password: string;
-  phone_number: string;
-  gender: string;
-  address: string;
-  role: string;
-  avatar: string;
-  categoryId: string;
-  userDescription: string;
-  otp: string;
-  otpExpires: string;
+  email?: string;
+  password?: string;
+  phone_number?: string;
+  gender?: 'male' | 'female' | 'other';
+  address?: string;
+  avatar?: string;
+  userDescription?: string;
+  categoryId?: any; // object khi populate hoặc string id
+  otp?: string;
+  otpExpires?: string;
+  resetOtp?: string;
+  resetOtpExpires?: string;
   isVerified: boolean;
-  token: string;
+  accessToken?: string;
+  tokenExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 };
