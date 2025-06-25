@@ -195,9 +195,6 @@ const MedicalRecords = () => {
           style={[styles.tab, activeTab === 'insurance' && styles.activeTab]}
           onPress={() => setActiveTab('insurance')}
         >
-          <Text style={[styles.tabText, activeTab === 'insurance' && styles.activeTabText]}>
-            Bảo hiểm
-          </Text>
         </TouchableOpacity>
       </View>
 
@@ -214,52 +211,7 @@ const MedicalRecords = () => {
         animationType="slide"
         onRequestClose={() => setShowInsuranceModal(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Cập nhật thông tin bảo hiểm</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Số bảo hiểm"
-              value={insuranceInfo.insuranceNumber}
-              onChangeText={(text) => setInsuranceInfo({ ...insuranceInfo, insuranceNumber: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Loại bảo hiểm"
-              value={insuranceInfo.insuranceType}
-              onChangeText={(text) => setInsuranceInfo({ ...insuranceInfo, insuranceType: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Ngày hết hạn (YYYY-MM-DD)"
-              value={insuranceInfo.expiryDate}
-              onChangeText={(text) => setInsuranceInfo({ ...insuranceInfo, expiryDate: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Bệnh viện đăng ký"
-              value={insuranceInfo.hospital}
-              onChangeText={(text) => setInsuranceInfo({ ...insuranceInfo, hospital: text })}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowInsuranceModal(false)}
-              >
-                <Text style={styles.modalButtonText}>Hủy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={() => {
-                  // TODO: Save insurance info to backend
-                  setShowInsuranceModal(false);
-                }}
-              >
-                <Text style={[styles.modalButtonText, styles.saveButtonText]}>Lưu</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        
       </Modal>
     </SafeAreaView>
   );
