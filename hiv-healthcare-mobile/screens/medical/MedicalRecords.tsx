@@ -130,26 +130,7 @@ const MedicalRecords = () => {
     </View>
   );
 
-  const renderInsuranceInfo = () => (
-    <View style={styles.section}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.sectionTitle}>Thông tin bảo hiểm</Text>
-          <TouchableOpacity onPress={() => setShowInsuranceModal(true)}>
-            <Ionicons name="create-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.label}>Số bảo hiểm:</Text>
-        <Text style={styles.contentText}>{insuranceInfo.insuranceNumber || 'Chưa cập nhật'}</Text>
-        <Text style={styles.label}>Loại bảo hiểm:</Text>
-        <Text style={styles.contentText}>{insuranceInfo.insuranceType || 'Chưa cập nhật'}</Text>
-        <Text style={styles.label}>Ngày hết hạn:</Text>
-        <Text style={styles.contentText}>{insuranceInfo.expiryDate || 'Chưa cập nhật'}</Text>
-        <Text style={styles.label}>Bệnh viện đăng ký:</Text>
-        <Text style={styles.contentText}>{insuranceInfo.hospital || 'Chưa cập nhật'}</Text>
-      </View>
-    </View>
-  );
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -202,7 +183,7 @@ const MedicalRecords = () => {
         {activeTab === 'history' && renderMedicalHistory()}
         {activeTab === 'prescriptions' && renderPrescriptions()}
         {activeTab === 'results' && renderDiagnosisResults()}
-        {activeTab === 'insurance' && renderInsuranceInfo()}
+     
       </ScrollView>
 
       <Modal
