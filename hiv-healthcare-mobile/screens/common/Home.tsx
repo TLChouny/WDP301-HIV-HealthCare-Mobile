@@ -9,6 +9,7 @@ import {
   Dimensions,
   StyleSheet,
   Platform,
+  Modal,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -165,6 +166,7 @@ const Home: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showAuthButtons, setShowAuthButtons] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Kiểm tra màn hình hiện tại để ẩn nút Đăng nhập/Đăng ký
   useEffect(() => {
@@ -203,6 +205,12 @@ const Home: React.FC = () => {
               >
                 <Text style={styles.registerButtonText}>Đăng ký</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={() => setModalVisible(true)}
+              >
+                <Icon name="chevron-down" size={22} color="#fff" />
+              </TouchableOpacity>
             </View>
           </View>
         </AnimatedElement>
@@ -233,22 +241,6 @@ const Home: React.FC = () => {
                 <Text style={styles.heroSubtitle}>
                   Đội ngũ y bác sĩ chuyên khoa giàu kinh nghiệm, tận tâm và không kỳ thị
                 </Text>
-              </AnimatedElement>
-              <AnimatedElement animationType="zoom-in" delay={600} duration={800}>
-                <View style={styles.searchContainer}>
-                  <Text style={styles.searchLabel}>Nhập địa chỉ, tỉnh/thành phố</Text>
-                  <View style={styles.searchInputContainer}>
-                    <TextInput
-                      style={styles.searchInput}
-                      placeholder="Nhập địa chỉ của bạn..."
-                      placeholderTextColor="#9CA3AF"
-                    />
-                    <Icon name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
-                  </View>
-                  <TouchableOpacity style={styles.searchButton}>
-                    <Text style={styles.searchButtonText}>Tìm Kiếm</Text>
-                  </TouchableOpacity>
-                </View>
               </AnimatedElement>
             </AnimatedElement>
             <AnimatedElement animationType="fade-left" delay={300} duration={1000}>
@@ -406,6 +398,35 @@ const Home: React.FC = () => {
           <Icon name="arrow-up" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Dropdown Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setModalVisible(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.dropdownText}>HIV Screening & Prevention (Chưa biết tình trạng)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.dropdownText}>HIV Treatment & Monitoring (Đã xác định nhiễm)</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -718,6 +739,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
+  },
+  dropdownButton: {
+    marginLeft: 8,
+    padding: 8,
+    backgroundColor: 'rgba(13,148,136,0.7)',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 56,
+    paddingRight: 16,
+  },
+  dropdownModal: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 8,
+    width: 270,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  dropdownText: {
+    fontSize: 15,
+    color: '#1F2A44',
   },
 });
 

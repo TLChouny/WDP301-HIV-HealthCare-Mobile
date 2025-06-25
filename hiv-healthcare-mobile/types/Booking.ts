@@ -6,7 +6,7 @@ export type Booking = {
   customerPhone?: string;
   serviceId: any; // object khi populate hoặc string id
   serviceName?: string;
-  bookingDate: string; // ISO string
+  bookingDate: string | Date; // ISO string hoặc Date object
   startTime: string;
   endTime?: string;
   duration?: number;
@@ -18,5 +18,5 @@ export type Booking = {
   status: 'cancel' | 'cancelled' | 'pending' | 'confirmed' | 'checked-in' | 'completed' | 'checked-out' | 'reviewed';
   isAnonymous?: boolean;
   userId?: any; // object khi populate hoặc string id
-  updatedAt?: string;
+  updatedAt?: string | Date;
 };

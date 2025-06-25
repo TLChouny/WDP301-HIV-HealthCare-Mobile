@@ -7,9 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Import screens
 import Home from '../screens/common/Home';
 import PatientProfile from '../screens/patient/PatientProfile';
-import MedicationManagement from '../screens/medical/MedicationManagement';
 import Appointment from '../screens/appointment/Appointment';
-import Doctor from '../screens/doctor/Doctor';
 import AppointmentBooking from '../screens/appointment/AppointmentBooking';
 import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
@@ -76,7 +74,6 @@ const MainTabNavigator = () => {
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Appointment" component={Appointment} />
       <Tab.Screen name="MedicalRecords" component={MedicalRecords} />
-      <Tab.Screen name="MedicationManagement" component={MedicationManagement} />
       <Tab.Screen name="Profile" component={PatientProfile} />
     </Tab.Navigator>
   );
@@ -104,7 +101,6 @@ export const Navigation = () => {
         <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
         <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
         <Stack.Screen name="PatientProfile" component={PatientProfile} />
-        <Stack.Screen name="MedicationManagement" component={MedicationManagement} />
       </Stack.Navigator>
     </NavigationContainer>
   );
