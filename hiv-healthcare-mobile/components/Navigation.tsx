@@ -17,7 +17,7 @@ import MedicalRecords from '../screens/medical/MedicalRecords';
 
 // Define navigation types
 export type RootStackParamList = {
-  Login: undefined;
+  Auth: undefined;
   Register: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   AppointmentBooking: undefined;
@@ -96,7 +96,7 @@ export const Navigation = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={AuthStackNavigator} />
+        <Stack.Screen name="Auth" component={AuthStackNavigator} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />

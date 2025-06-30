@@ -11,6 +11,7 @@ import Icon from "react-native-vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Navigation types
 type RootStackParamList = {
@@ -27,9 +28,11 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const { register } = useAuth();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email || !password || !confirmPassword) {
       Toast.show({
         type: "error",
@@ -52,20 +55,51 @@ const Register: React.FC = () => {
       return;
     }
 
-    // TODO: Thêm logic xử lý đăng ký (ví dụ: gọi API)
-    Toast.show({
-      type: "success",
-      text1: "Đăng ký thành công!",
-      position: "top",
-      autoHide: true,
-      visibilityTime: 3000,
-    });
-    navigation.navigate("Login");
+    if (password.length < 6) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu phải có ít nhất 6 ký tự!",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await register({
+        email,
+        password,
+        role: "user", // Mặc định role user cho đăng ký
+      });
+      Toast.show({
+        type: "success",
+        text1: "Đăng ký thành công!",
+        text2: "Vui lòng kiểm tra email để xác minh tài khoản.",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      navigation.navigate("Login");
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Đăng ký thất bại!",
+        text2: error.message || "Vui lòng thử lại.",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
+        <Text style={styles.appTitle}>HIV Healthcare</Text>
         <Text style={styles.title}>Đăng Ký</Text>
         
         <View style={styles.inputContainer}>
@@ -114,8 +148,14 @@ const Register: React.FC = () => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Đăng Ký</Text>
+        <TouchableOpacity 
+          style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          <Text style={styles.submitButtonText}>
+            {loading ? "Đang đăng ký..." : "Đăng Ký"}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.loginLinkContainer}>
@@ -149,6 +189,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#0D9488",
+    textAlign: "center",
+    marginBottom: 8,
   },
   title: {
     fontSize: 20,
@@ -194,6 +241,9 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "500",
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#D1D5DB",
   },
   loginLinkContainer: {
     flexDirection: "row",

@@ -18,4 +18,5 @@ export type User = {
   tokenExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
+  role?: string;
 };

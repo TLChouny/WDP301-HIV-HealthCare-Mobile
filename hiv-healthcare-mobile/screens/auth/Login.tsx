@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { RootStackParamList } from "../../components/Navigation";
+import { useAuth } from "../../contexts/AuthContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -21,9 +22,11 @@ const { width } = Dimensions.get("window");
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const { login } = useAuth();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email || !password) {
       Toast.show({
         type: "error",
@@ -35,20 +38,35 @@ const Login: React.FC = () => {
       return;
     }
 
-    // TODO: Thêm logic xử lý đăng nhập (ví dụ: gọi API)
-    Toast.show({
-      type: "success",
-      text1: "Đăng nhập thành công!",
-      position: "top",
-      autoHide: true,
-      visibilityTime: 3000,
-    });
-    navigation.navigate("MainTabs" as never);
+    try {
+      setLoading(true);
+      await login({ email, password }, navigation);
+      Toast.show({
+        type: "success",
+        text1: "Đăng nhập thành công!",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+      // Navigation sẽ được xử lý trong AuthContext dựa trên role
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Đăng nhập thất bại!",
+        text2: error.message || "Vui lòng kiểm tra lại thông tin.",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
+        <Text style={styles.appTitle}>HIV Healthcare</Text>
         <Text style={styles.title}>Đăng Nhập</Text>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
@@ -89,8 +107,14 @@ const Login: React.FC = () => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Đăng Nhập</Text>
+        <TouchableOpacity 
+          style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          <Text style={styles.submitButtonText}>
+            {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.registerLinkContainer}>
@@ -124,6 +148,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#0D9488",
+    textAlign: "center",
+    marginBottom: 8,
   },
   title: {
     fontSize: 20,
@@ -177,6 +208,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#D1D5DB",
   },
   submitButtonText: {
     color: "#FFFFFF",
