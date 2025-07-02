@@ -1,19 +1,25 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import {
+  NavigationContainer,
+  NavigatorScreenParams,
+} from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 // Import screens
-import Home from '../screens/common/Home';
-import PatientProfile from '../screens/patient/PatientProfile';
-import Appointment from '../screens/appointment/Appointment';
-import AppointmentBooking from '../screens/appointment/AppointmentBooking';
-import Login from '../screens/auth/Login';
-import Register from '../screens/auth/Register';
-import ForgotPassword from '../screens/auth/ForgotPassword';
-import OnlineConsultation from '../screens/appointment/OnlineConsultation';
-import MedicalRecords from '../screens/medical/MedicalRecords';
+import Home from "../screens/common/Home";
+import PatientProfile from "../screens/patient/PatientProfile";
+import Appointment from "../screens/appointment/Appointment";
+import AppointmentBooking from "../screens/appointment/AppointmentBooking";
+import Login from "../screens/auth/Login";
+import Register from "../screens/auth/Register";
+import ForgotPassword from "../screens/auth/ForgotPassword";
+import OnlineConsultation from "../screens/appointment/OnlineConsultation";
+import MedicalRecords from "../screens/medical/MedicalRecords";
+import VerifyOTP from "../screens/auth/VerifyOTP";
+import ResetPassword from "../screens/auth/ResetPassword";
+import VerifyResetOTP from "../screens/auth/VerifyResetOTP";
 
 // Define navigation types
 export type RootStackParamList = {
@@ -54,22 +60,22 @@ const MainTabNavigator = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Appointment') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'MedicalRecords') {
-            iconName = focused ? 'document-text' : 'document-text-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'MedicationManagement') {
-            iconName = focused ? 'medkit' : 'medkit-outline';
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Appointment") {
+            iconName = focused ? "calendar" : "calendar-outline";
+          } else if (route.name === "MedicalRecords") {
+            iconName = focused ? "document-text" : "document-text-outline";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
+          } else if (route.name === "MedicationManagement") {
+            iconName = focused ? "medkit" : "medkit-outline";
           }
 
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#0D9488',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: "#0D9488",
+        tabBarInactiveTintColor: "gray",
       })}
     >
       <Tab.Screen name="Home" component={Home} />
@@ -87,6 +93,9 @@ const AuthStackNavigator = () => {
       <AuthStack.Screen name="Login" component={Login} />
       <AuthStack.Screen name="Register" component={Register} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <AuthStack.Screen name="VerifyOTP" component={VerifyOTP} />
+      <AuthStack.Screen name="ResetPassword" component={ResetPassword} />
+      <AuthStack.Screen name="VerifyResetOTP" component={VerifyResetOTP} />
     </AuthStack.Navigator>
   );
 };
@@ -99,8 +108,14 @@ export const Navigation = () => {
         <Stack.Screen name="Login" component={AuthStackNavigator} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        <Stack.Screen name="AppointmentBooking" component={AppointmentBooking} />
-        <Stack.Screen name="OnlineConsultation" component={OnlineConsultation} />
+        <Stack.Screen
+          name="AppointmentBooking"
+          component={AppointmentBooking}
+        />
+        <Stack.Screen
+          name="OnlineConsultation"
+          component={OnlineConsultation}
+        />
         <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
         <Stack.Screen name="PatientProfile" component={PatientProfile} />
       </Stack.Navigator>

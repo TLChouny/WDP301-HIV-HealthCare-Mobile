@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
@@ -15,19 +16,57 @@ import { RootStackParamList } from "../../components/Navigation";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// Screen dimensions
 const { width } = Dimensions.get("window");
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+<<<<<<< Updated upstream
   const navigation = useNavigation<NavigationProp>();
 
   const handleSubmit = () => {
     if (!email || !password) {
+=======
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigation = useNavigation<NavigationProp>();
+
+  const { login, loading: authLoading } = useAuth();
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = (): string | null => {
+    if (!email.trim()) {
+      return "Vui lòng nhập email";
+    }
+
+    if (!validateEmail(email)) {
+      return "Email không hợp lệ";
+    }
+
+    if (!password.trim()) {
+      return "Vui lòng nhập mật khẩu";
+    }
+
+    if (password.length < 6) {
+      return "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+>>>>>>> Stashed changes
       Toast.show({
         type: "error",
-        text1: "Vui lòng điền đầy đủ thông tin!",
+        text1: "Thông tin không hợp lệ",
+        text2: validationError,
         position: "top",
         autoHide: true,
         visibilityTime: 3000,
@@ -35,6 +74,7 @@ const Login: React.FC = () => {
       return;
     }
 
+<<<<<<< Updated upstream
     // TODO: Thêm logic xử lý đăng nhập (ví dụ: gọi API)
     Toast.show({
       type: "success",
@@ -44,12 +84,73 @@ const Login: React.FC = () => {
       visibilityTime: 3000,
     });
     navigation.navigate("MainTabs" as never);
+=======
+    try {
+      setLoading(true);
+      await login(
+        {
+          email: email.trim().toLowerCase(),
+          password: password.trim(),
+        },
+        navigation
+      );
+
+      Toast.show({
+        type: "success",
+        text1: "Đăng nhập thành công!",
+        text2: "Chào mừng bạn trở lại",
+        position: "top",
+        autoHide: true,
+        visibilityTime: 2000,
+      });
+    } catch (error: any) {
+      let errorMessage = "Vui lòng kiểm tra lại thông tin đăng nhập";
+
+      if (error.message) {
+        if (error.message.includes("email")) {
+          errorMessage = "Email không tồn tại trong hệ thống";
+        } else if (
+          error.message.includes("password") ||
+          error.message.includes("mật khẩu")
+        ) {
+          errorMessage = "Mật khẩu không chính xác";
+        } else if (
+          error.message.includes("verify") ||
+          error.message.includes("xác minh")
+        ) {
+          errorMessage =
+            "Tài khoản chưa được xác minh. Vui lòng kiểm tra email";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("timeout")
+        ) {
+          errorMessage = "Lỗi kết nối mạng. Vui lòng thử lại";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      Toast.show({
+        type: "error",
+        text1: "Đăng nhập thất bại!",
+        text2: errorMessage,
+        position: "top",
+        autoHide: true,
+        visibilityTime: 4000,
+      });
+    } finally {
+      setLoading(false);
+    }
+>>>>>>> Stashed changes
   };
+
+  const isLoading = loading || authLoading;
 
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
         <Text style={styles.title}>Đăng Nhập</Text>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <View style={styles.inputWrapper}>
@@ -61,8 +162,15 @@ const Login: React.FC = () => {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isLoading}
             />
-            <Icon name="mail" size={20} color="#9CA3AF" style={styles.inputIcon} />
+            <Icon
+              name="mail"
+              size={20}
+              color="#9CA3AF"
+              style={styles.inputIcon}
+            />
           </View>
         </View>
 
@@ -75,27 +183,65 @@ const Login: React.FC = () => {
               placeholderTextColor="#9CA3AF"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              editable={!isLoading}
             />
-            <Icon name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
-          </View>
-        </View>
-
-        <View style={styles.optionsContainer}>
-          <View style={styles.rememberMe}>
-            <TouchableOpacity>
-              <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.inputIcon}
+              disabled={isLoading}
+            >
+              <Icon
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#9CA3AF"
+              />
             </TouchableOpacity>
           </View>
         </View>
 
+<<<<<<< Updated upstream
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Đăng Nhập</Text>
+=======
+        <View style={styles.optionsContainer}>
+          <TouchableOpacity style={styles.rememberMe} disabled={isLoading}>
+            <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ForgotPassword" as never)}
+            disabled={isLoading}
+          >
+            <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            isLoading && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#FFFFFF" size="small" />
+              <Text style={styles.submitButtonText}>Đang đăng nhập...</Text>
+            </View>
+          ) : (
+            <Text style={styles.submitButtonText}>Đăng Nhập</Text>
+          )}
+>>>>>>> Stashed changes
         </TouchableOpacity>
 
         <View style={styles.registerLinkContainer}>
           <Text style={styles.registerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Register" as never)}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Register" as never)}
+            disabled={isLoading}
+          >
             <View style={styles.registerLink}>
               <Text style={styles.registerLinkText}>Đăng ký ngay</Text>
               <Icon name="arrow-right" size={16} color="#0D9488" />
@@ -116,28 +262,38 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
+    padding: 24,
     marginHorizontal: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 5,
   },
+<<<<<<< Updated upstream
+=======
+  appTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#0D9488",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+>>>>>>> Stashed changes
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "700",
     color: "#1F2A44",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 24,
   },
   inputContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "600",
     color: "#374151",
     marginBottom: 8,
   },
@@ -147,50 +303,70 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#F9FAFB",
   },
   input: {
     flex: 1,
-    paddingVertical: 10,
-    fontSize: 14,
+    paddingVertical: 14,
+    fontSize: 16,
     color: "#374151",
   },
   inputIcon: {
     marginLeft: 8,
+    padding: 4,
   },
   optionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 24,
   },
   rememberMe: {
     flexDirection: "row",
     alignItems: "center",
   },
   optionText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#0D9488",
+    fontWeight: "500",
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: "#0D9488",
+    fontWeight: "500",
   },
   submitButton: {
     backgroundColor: "#0D9488",
-    paddingVertical: 10,
+    paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 16,
   },
+<<<<<<< Updated upstream
+=======
+  submitButtonDisabled: {
+    backgroundColor: "#9CA3AF",
+  },
+>>>>>>> Stashed changes
   submitButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   registerLinkContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 8,
   },
   registerText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#6B7280",
   },
   registerLink: {
@@ -198,10 +374,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   registerLinkText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#0D9488",
-    fontWeight: "500",
+    fontWeight: "600",
     marginRight: 4,
+  },
+  // Development styles
+  devContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#FEF3C7",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+  },
+  devTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#92400E",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  devButton: {
+    backgroundColor: "#F59E0B",
+    padding: 8,
+    borderRadius: 4,
+    marginVertical: 2,
+  },
+  devButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    textAlign: "center",
+    fontWeight: "500",
   },
 });
 
