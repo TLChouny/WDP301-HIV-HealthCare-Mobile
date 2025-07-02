@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { RootStackParamList } from "../../components/Navigation";
+import { useAuth } from "../../contexts/AuthContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -21,12 +22,6 @@ const { width } = Dimensions.get("window");
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-<<<<<<< Updated upstream
-  const navigation = useNavigation<NavigationProp>();
-
-  const handleSubmit = () => {
-    if (!email || !password) {
-=======
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -62,7 +57,6 @@ const Login: React.FC = () => {
   const handleSubmit = async () => {
     const validationError = validateForm();
     if (validationError) {
->>>>>>> Stashed changes
       Toast.show({
         type: "error",
         text1: "Thông tin không hợp lệ",
@@ -73,18 +67,6 @@ const Login: React.FC = () => {
       });
       return;
     }
-
-<<<<<<< Updated upstream
-    // TODO: Thêm logic xử lý đăng nhập (ví dụ: gọi API)
-    Toast.show({
-      type: "success",
-      text1: "Đăng nhập thành công!",
-      position: "top",
-      autoHide: true,
-      visibilityTime: 3000,
-    });
-    navigation.navigate("MainTabs" as never);
-=======
     try {
       setLoading(true);
       await login(
@@ -94,7 +76,6 @@ const Login: React.FC = () => {
         },
         navigation
       );
-
       Toast.show({
         type: "success",
         text1: "Đăng nhập thành công!",
@@ -105,7 +86,6 @@ const Login: React.FC = () => {
       });
     } catch (error: any) {
       let errorMessage = "Vui lòng kiểm tra lại thông tin đăng nhập";
-
       if (error.message) {
         if (error.message.includes("email")) {
           errorMessage = "Email không tồn tại trong hệ thống";
@@ -129,7 +109,6 @@ const Login: React.FC = () => {
           errorMessage = error.message;
         }
       }
-
       Toast.show({
         type: "error",
         text1: "Đăng nhập thất bại!",
@@ -141,7 +120,6 @@ const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
->>>>>>> Stashed changes
   };
 
   const isLoading = loading || authLoading;
@@ -200,10 +178,6 @@ const Login: React.FC = () => {
           </View>
         </View>
 
-<<<<<<< Updated upstream
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Đăng Nhập</Text>
-=======
         <View style={styles.optionsContainer}>
           <TouchableOpacity style={styles.rememberMe} disabled={isLoading}>
             <Text style={styles.optionText}>Ghi nhớ đăng nhập</Text>
@@ -233,7 +207,6 @@ const Login: React.FC = () => {
           ) : (
             <Text style={styles.submitButtonText}>Đăng Nhập</Text>
           )}
->>>>>>> Stashed changes
         </TouchableOpacity>
 
         <View style={styles.registerLinkContainer}>
@@ -271,16 +244,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-<<<<<<< Updated upstream
-=======
-  appTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#0D9488",
-    textAlign: "center",
-    marginBottom: 8,
-  },
->>>>>>> Stashed changes
   title: {
     fontSize: 24,
     fontWeight: "700",
@@ -343,12 +306,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-<<<<<<< Updated upstream
-=======
   submitButtonDisabled: {
     backgroundColor: "#9CA3AF",
   },
->>>>>>> Stashed changes
   submitButtonText: {
     color: "#FFFFFF",
     fontSize: 16,

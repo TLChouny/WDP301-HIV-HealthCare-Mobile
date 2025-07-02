@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Navigation } from "./components/Navigation";
 import { AppointmentProvider } from './contexts/AppointmentContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { StatusBar } from 'react-native';
 
 interface AppProvidersProps {
@@ -14,9 +15,11 @@ interface AppProvidersProps {
 const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
     <SafeAreaProvider>
-      <AppointmentProvider>
-        {children}
-      </AppointmentProvider>
+      <AuthProvider>
+        <AppointmentProvider>
+          {children}
+        </AppointmentProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 };
