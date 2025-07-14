@@ -82,7 +82,7 @@ const ForgotPassword: React.FC = () => {
 
       // Navigate to OTP verification screen after a short delay
       setTimeout(() => {
-        navigation.navigate("ResetPasswordOTP", {
+        navigation.navigate("VerifyResetOTP", {
           email: email.trim().toLowerCase(),
         });
       }, 2000);
@@ -252,7 +252,7 @@ const ForgotPassword: React.FC = () => {
               <TouchableOpacity
                 style={styles.continueButton}
                 onPress={() =>
-                  navigation.navigate("ResetPasswordOTP", {
+                  navigation.navigate("VerifyResetOTP", {
                     email: email.trim().toLowerCase(),
                   })
                 }

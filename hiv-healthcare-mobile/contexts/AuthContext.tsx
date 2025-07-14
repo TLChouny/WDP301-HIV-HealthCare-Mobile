@@ -206,7 +206,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = decodeAndValidateToken(token);
       setUser(userData);
 
-      navigateBasedOnRole(userData, navigation);
+      if (navigation) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainTabs" }],
+        });
+      }
+
+      console.log("Đăng nhập thành công, đã chuyển đến MainTabs");
     } catch (error: any) {
       console.error("Lỗi đăng nhập:", error.message);
       throw error;
@@ -281,7 +288,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const forgotPassword = async (data: { email: string }) => {
     try {
-       await apiForgotPassword(data);
+      await apiForgotPassword(data);
     } catch (error: any) {
       console.error("Lỗi yêu cầu đặt lại mật khẩu:", error.message);
       throw error;

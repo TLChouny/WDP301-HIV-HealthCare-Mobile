@@ -67,6 +67,7 @@ const Login: React.FC = () => {
       });
       return;
     }
+
     try {
       setLoading(true);
       await login(
@@ -76,6 +77,7 @@ const Login: React.FC = () => {
         },
         navigation
       );
+
       Toast.show({
         type: "success",
         text1: "Đăng nhập thành công!",
@@ -86,6 +88,7 @@ const Login: React.FC = () => {
       });
     } catch (error: any) {
       let errorMessage = "Vui lòng kiểm tra lại thông tin đăng nhập";
+
       if (error.message) {
         if (error.message.includes("email")) {
           errorMessage = "Email không tồn tại trong hệ thống";
@@ -109,6 +112,7 @@ const Login: React.FC = () => {
           errorMessage = error.message;
         }
       }
+
       Toast.show({
         type: "error",
         text1: "Đăng nhập thất bại!",
@@ -127,6 +131,7 @@ const Login: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
+        <Text style={styles.appTitle}>HIV Healthcare</Text>
         <Text style={styles.title}>Đăng Nhập</Text>
 
         <View style={styles.inputContainer}>
@@ -243,6 +248,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+  },
+  appTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#0D9488",
+    textAlign: "center",
+    marginBottom: 8,
   },
   title: {
     fontSize: 24,

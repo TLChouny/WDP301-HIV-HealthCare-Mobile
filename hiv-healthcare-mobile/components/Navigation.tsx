@@ -1,3 +1,4 @@
+// components/Navigation.tsx - Sửa lại
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -6,6 +7,7 @@ import {
   NavigatorScreenParams,
 } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../contexts/AuthContext"; // ✅ Import useAuth
 
 // Import screens
 import Home from "../screens/common/Home";
@@ -45,6 +47,9 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  VerifyOTP: { email: string };
+  ResetPassword: { resetToken: string };
+  VerifyResetOTP: { email: string };
 };
 
 // Create navigators
@@ -76,6 +81,7 @@ const MainTabNavigator = () => {
         },
         tabBarActiveTintColor: "#0D9488",
         tabBarInactiveTintColor: "gray",
+        headerShown: false, // ✅ Ẩn header của tab navigator
       })}
     >
       <Tab.Screen name="Home" component={Home} />
@@ -86,7 +92,6 @@ const MainTabNavigator = () => {
   );
 };
 
-// Auth Stack Navigator
 const AuthStackNavigator = () => {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -100,24 +105,34 @@ const AuthStackNavigator = () => {
   );
 };
 
-// Root Navigator
 export const Navigation = () => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Auth" component={AuthStackNavigator} />
-        <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        <Stack.Screen
-          name="AppointmentBooking"
-          component={AppointmentBooking}
-        />
-        <Stack.Screen
-          name="OnlineConsultation"
-          component={OnlineConsultation}
-        />
-        <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
-        <Stack.Screen name="PatientProfile" component={PatientProfile} />
+        {isAuthenticated ? (
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen
+              name="AppointmentBooking"
+              component={AppointmentBooking}
+            />
+            <Stack.Screen
+              name="OnlineConsultation"
+              component={OnlineConsultation}
+            />
+            <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
+            <Stack.Screen name="PatientProfile" component={PatientProfile} />
+          </>
+        ) : (
+          // ✅ Chưa đăng nhập - hiển thị auth screens
+          <Stack.Screen name="Auth" component={AuthStackNavigator} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

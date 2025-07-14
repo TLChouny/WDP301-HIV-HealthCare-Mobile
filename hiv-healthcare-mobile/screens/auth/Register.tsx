@@ -75,38 +75,50 @@ const Register: React.FC = () => {
   };
 
   const validateForm = (): string | null => {
-    const { userName, email, password, confirmPassword, phone_number } = formData;
+    const { userName, email, password, confirmPassword, phone_number } =
+      formData;
+
     if (!userName.trim()) {
       return "Vui lòng nhập tên người dùng";
     }
+
     if (userName.trim().length < 2) {
       return "Tên người dùng phải có ít nhất 2 ký tự";
     }
+
     if (!email.trim()) {
       return "Vui lòng nhập email";
     }
+
     if (!validateEmail(email)) {
       return "Email không hợp lệ";
     }
+
     if (phone_number && !validatePhone(phone_number)) {
       return "Số điện thoại không hợp lệ";
     }
+
     if (!password.trim()) {
       return "Vui lòng nhập mật khẩu";
     }
+
     const passwordError = validatePassword(password);
     if (passwordError) {
       return passwordError;
     }
+
     if (!confirmPassword.trim()) {
       return "Vui lòng nhập xác nhận mật khẩu";
     }
+
     if (password !== confirmPassword) {
       return "Mật khẩu xác nhận không khớp";
     }
+
     if (!acceptTerms) {
       return "Vui lòng đồng ý với điều khoản sử dụng";
     }
+
     return null;
   };
 
@@ -123,8 +135,10 @@ const Register: React.FC = () => {
       });
       return;
     }
+
     try {
       setLoading(true);
+
       const registerData = {
         userName: formData.userName.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -132,7 +146,9 @@ const Register: React.FC = () => {
         phone_number: formData.phone_number.trim() || undefined,
         role: "user",
       };
+
       await register(registerData);
+
       Toast.show({
         type: "success",
         text1: "Đăng ký thành công!",
@@ -141,12 +157,15 @@ const Register: React.FC = () => {
         autoHide: true,
         visibilityTime: 3000,
       });
+
       navigation.navigate("VerifyOTP", {
         email: formData.email.trim().toLowerCase(),
       });
     } catch (error: any) {
       console.error("Register error:", error);
+
       let errorMessage = "Vui lòng thử lại sau";
+
       if (error.message) {
         if (
           error.message.includes("email") &&
@@ -167,6 +186,7 @@ const Register: React.FC = () => {
           errorMessage = error.message;
         }
       }
+
       Toast.show({
         type: "error",
         text1: "Đăng ký thất bại!",
@@ -190,6 +210,7 @@ const Register: React.FC = () => {
         <Text style={styles.subtitle}>
           Tạo tài khoản mới để sử dụng dịch vụ
         </Text>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Tên người dùng *</Text>
           <View style={styles.inputWrapper}>
@@ -210,6 +231,7 @@ const Register: React.FC = () => {
             />
           </View>
         </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email *</Text>
           <View style={styles.inputWrapper}>
@@ -232,6 +254,7 @@ const Register: React.FC = () => {
             />
           </View>
         </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Số điện thoại</Text>
           <View style={styles.inputWrapper}>
@@ -252,6 +275,7 @@ const Register: React.FC = () => {
             />
           </View>
         </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Mật khẩu *</Text>
           <View style={styles.inputWrapper}>
@@ -280,6 +304,7 @@ const Register: React.FC = () => {
             Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số
           </Text>
         </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Xác nhận mật khẩu *</Text>
           <View style={styles.inputWrapper}>
@@ -305,18 +330,24 @@ const Register: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
+
         <TouchableOpacity
           style={styles.checkboxContainer}
           onPress={() => setAcceptTerms(!acceptTerms)}
           disabled={isLoading}
         >
-          <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+          <View
+            style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}
+          >
             {acceptTerms && <Icon name="check" size={16} color="#FFFFFF" />}
           </View>
           <Text style={styles.checkboxText}>
-            Tôi đồng ý với <Text style={styles.linkText}>Điều khoản sử dụng</Text> và <Text style={styles.linkText}>Chính sách bảo mật</Text>
+            Tôi đồng ý với{" "}
+            <Text style={styles.linkText}>Điều khoản sử dụng</Text> và{" "}
+            <Text style={styles.linkText}>Chính sách bảo mật</Text>
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.submitButton,
@@ -334,6 +365,7 @@ const Register: React.FC = () => {
             <Text style={styles.submitButtonText}>Đăng Ký</Text>
           )}
         </TouchableOpacity>
+
         <View style={styles.loginLinkContainer}>
           <Text style={styles.loginText}>Đã có tài khoản? </Text>
           <TouchableOpacity
