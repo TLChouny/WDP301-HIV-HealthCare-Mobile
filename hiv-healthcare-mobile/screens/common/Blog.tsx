@@ -15,6 +15,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { StackNavigationProp } from "@react-navigation/stack";
+import type { RootStackParamList } from "../../components/Navigation";
 
 interface Blog {
   _id: string;
@@ -48,6 +51,7 @@ const BlogPage: React.FC = () => {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const postsPerPage = 6;
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'Blog'>>();
 
   // Mock API functions - replace with actual API calls
   const getAllBlogs = async (): Promise<Blog[]> => {
@@ -352,6 +356,13 @@ const BlogPage: React.FC = () => {
       >
         {/* Header */}
         <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("MainTabs", { screen: "Home" })}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={28} color="#fff" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Blog</Text>
           <Text style={styles.headerSubtitle}>
             Cập nhật kiến thức, chia sẻ thông tin và câu chuyện về sức khỏe và
@@ -516,6 +527,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
     paddingHorizontal: 20,
+  },
+  backButton: {
+    position: "absolute",
+    left: 16,
+    top: 50,
+    zIndex: 1,
   },
   searchFilterContainer: {
     flexDirection: "row",
