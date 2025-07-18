@@ -1,382 +1,718 @@
-import React, { useState } from 'react';
+// screens/user/PatientProfile.tsx
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   ScrollView,
-  Image,
   TouchableOpacity,
-  FlatList,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { User } from '../../types/User';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { RootStackParamList } from '../../components/Navigation';
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../contexts/AuthContext";
+import { User } from "../../types/User";
 
-// Mock data for appointments and history
-const mockUpcomingAppointments = [
-  {
-    id: '1',
-    date: '2024-06-10',
-    time: '09:00',
-    doctor: 'BS. Nguyễn Văn B',
-    service: 'Khám tổng quát',
-    status: 'confirmed',
-  },
-  {
-    id: '2',
-    date: '2024-06-15',
-    time: '14:00',
-    doctor: 'BS. Trần Thị C',
-    service: 'Tư vấn HIV',
-    status: 'pending',
-  },
-];
+type Gender = "male" | "female" | "other";
 
-const mockHistory = [
-  {
-    id: '3',
-    date: '2024-05-01',
-    time: '10:00',
-    doctor: 'BS. Nguyễn Văn B',
-    service: 'Khám tổng quát',
-    status: 'completed',
-  },
-  {
-    id: '4',
-    date: '2024-04-20',
-    time: '15:00',
-    doctor: 'BS. Trần Thị C',
-    service: 'Tư vấn HIV',
-    status: 'completed',
-  },
-];
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const PatientProfile = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const [user, setUser] = useState<User>({
-    _id: '1',
-    userName: 'nguyenvana',
-    email: 'nguyenvana@example.com',
-    password: '123456',
-    phone_number: '0123456789',
-    gender: 'male',
-    address: '123 Đường ABC, Quận 1, TP.HCM',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    categoryId: '',
-    userDescription: '',
-    otp: '',
-    otpExpires: '',
-    isVerified: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
+const PatientProfile: React.FC = () => {
+  const { user, getUserById, updateUser, logout, loading } = useAuth();
+  const [userData, setUserData] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    userName: "",
+    phone_number: "",
+    gender: "",
+    address: "",
+    userDescription: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (loading || !user?._id) {
+        return;
+      }
 
-  const handleChange = (field: keyof User, value: string) => {
-    setUser({ ...user, [field]: value });
+      try {
+        console.log("Lấy dữ liệu người dùng với ID:", user._id);
+        const detailedUser: User = await getUserById(user._id);
+        setUserData(detailedUser);
+        setFormData({
+          userName: detailedUser.userName || "",
+          phone_number: detailedUser.phone_number || "",
+          gender: detailedUser.gender || "",
+          address: detailedUser.address || "",
+          userDescription: detailedUser.userDescription || "",
+        });
+        setError(null);
+      } catch (error: any) {
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error.message);
+        let errorMessage = "Không thể tải thông tin người dùng!";
+        if (error.message?.toLowerCase().includes("authenticate")) {
+          errorMessage = "Phiên đăng nhập hết hạn!";
+          logout();
+        }
+        setError(errorMessage);
+        Alert.alert("Lỗi", errorMessage);
+      }
+    };
+
+    fetchUserData();
+  }, [user?._id, getUserById, logout, loading]);
+
+  const handleInputChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    if (newPassword !== confirmPassword) {
-      alert('Mật khẩu không khớp!');
+  const validateForm = () => {
+    if (!formData.userName.trim()) {
+      return "Vui lòng nhập tên người dùng!";
+    }
+    if (
+      formData.gender &&
+      !["male", "female", "other"].includes(formData.gender)
+    ) {
+      return "Giới tính phải là 'male', 'female', hoặc 'other'!";
+    }
+    if (formData.phone_number && !/^\d{10}$/.test(formData.phone_number)) {
+      return "Số điện thoại phải là 10 chữ số!";
+    }
+    return null;
+  };
+
+  const handleUpdate = async () => {
+    if (!user?._id) {
+      const errorMessage = "Vui lòng đăng nhập để cập nhật!";
+      setError(errorMessage);
+      Alert.alert("Lỗi", errorMessage);
       return;
     }
-    const updatedUser: User = {
-      ...user,
-      password: newPassword || user.password,
-    };
-    setUser(updatedUser);
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      Alert.alert("Lỗi", validationError);
+      return;
+    }
+
+    try {
+      const updatePayload = {
+        userName: formData.userName.trim(),
+        phone_number: formData.phone_number || undefined,
+        gender: (formData.gender as Gender) || undefined,
+        address: formData.address || undefined,
+        userDescription: formData.userDescription || undefined,
+      };
+
+      console.log("Payload gửi đi:", updatePayload);
+      await updateUser(user._id, updatePayload);
+      const refreshedUser: User = await getUserById(user._id);
+      console.log("Dữ liệu người dùng sau cập nhật:", refreshedUser);
+
+      setUserData(refreshedUser);
+      setIsEditing(false);
+      setError(null);
+      Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+    } catch (error: any) {
+      console.error("Lỗi khi cập nhật thông tin người dùng:", error.message);
+      const errorMessage = error.message || "Cập nhật thông tin thất bại!";
+      setError(errorMessage);
+      Alert.alert("Lỗi", errorMessage);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setError(null);
+  };
+
+  const handleCancel = () => {
     setIsEditing(false);
-    // TODO: Gọi API để cập nhật dữ liệu người dùng
-    console.log('Thông tin cập nhật:', updatedUser);
+    setError(null);
+    setFormData({
+      userName: userData?.userName || "",
+      phone_number: userData?.phone_number || "",
+      gender: userData?.gender || "",
+      address: userData?.address || "",
+      userDescription: userData?.userDescription || "",
+    });
   };
 
-  // Helper for gender display
-  const getGenderLabel = (gender?: string) => {
-    if (gender === 'male') return 'Nam';
-    if (gender === 'female') return 'Nữ';
-    if (gender === 'other') return 'Khác';
-    return '';
+  const getGenderDisplayText = (gender?: string) => {
+    switch (gender) {
+      case "male":
+        return "Nam";
+      case "female":
+        return "Nữ";
+      case "other":
+        return "Khác";
+      default:
+        return "Chưa cập nhật";
+    }
   };
 
-  // Render item for appointment/history
-  const renderAppointmentItem = ({ item }: { item: any }) => (
-    <View style={styles.appointmentItem}>
-      <MaterialIcons name="event-available" size={20} color="#0D9488" style={{ marginRight: 8 }} />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.appointmentText}>{item.date} {item.time} - {item.service}</Text>
-        <Text style={styles.appointmentSubText}>Bác sĩ: {item.doctor}</Text>
-      </View>
-      <Text style={[styles.status, item.status === 'confirmed' ? styles.statusConfirmed : item.status === 'pending' ? styles.statusPending : styles.statusCompleted]}>
-        {item.status === 'confirmed' ? 'Đã xác nhận' : item.status === 'pending' ? 'Chờ xác nhận' : 'Hoàn thành'}
-      </Text>
-    </View>
-  );
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0D9488" />
+          <Text style={styles.loadingText}>Đang tải thông tin xác thực...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <View style={styles.errorIconContainer}>
+            <Ionicons name="person-outline" size={64} color="#9CA3AF" />
+          </View>
+          <Text style={styles.errorTitle}>Vui lòng đăng nhập</Text>
+          <Text style={styles.errorDescription}>
+            Bạn cần đăng nhập để xem thông tin cá nhân
+          </Text>
+          <TouchableOpacity
+            style={styles.errorButton}
+            onPress={() => {
+              Alert.alert("Thông báo", "Chuyển đến trang đăng nhập");
+            }}
+          >
+            <Text style={styles.errorButtonText}>Đăng nhập</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !isEditing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <View
+            style={[styles.errorIconContainer, { backgroundColor: "#FEF2F2" }]}
+          >
+            <Ionicons name="close-circle-outline" size={64} color="#EF4444" />
+          </View>
+          <Text style={styles.errorTitle}>Có lỗi xảy ra</Text>
+          <Text style={styles.errorDescription}>{error}</Text>
+          {error.includes("đăng nhập") && (
+            <TouchableOpacity
+              style={styles.errorButton}
+              onPress={() => {
+                Alert.alert("Thông báo", "Chuyển đến trang đăng nhập");
+              }}
+            >
+              <Text style={styles.errorButtonText}>Đăng nhập lại</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0D9488" />
+          <Text style={styles.loadingText}>
+            Đang tải thông tin người dùng...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Thông tin cá nhân */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: user.avatar }} style={styles.avatar} />
-            <Text style={styles.fullName}>{user.userName}</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerTitleContainer}>
+              <View style={styles.headerIcon}>
+                <Ionicons name="person-outline" size={24} color="#FFFFFF" />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>Thông tin cá nhân</Text>
+                <Text style={styles.headerSubtitle}>
+                  Quản lý và cập nhật thông tin cá nhân của bạn
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.infoRow}><Text style={styles.label}>Giới tính:</Text><Text style={styles.value}>{getGenderLabel(user.gender)}</Text></View>
-          <View style={styles.infoRow}><Text style={styles.label}>Số điện thoại:</Text><Text style={styles.value}>{user.phone_number}</Text></View>
-          <View style={styles.infoRow}><Text style={styles.label}>Email:</Text><Text style={styles.value}>{user.email}</Text></View>
-          <View style={styles.infoRow}><Text style={styles.label}>Địa chỉ:</Text><Text style={styles.value}>{user.address}</Text></View>
-          {isEditing && (
-            <>
-              <TextInput
-                style={styles.input}
-                value={user.userName}
-                onChangeText={(text) => handleChange('userName', text)}
-                placeholder="Tên người dùng"
-              />
-              <TextInput
-                style={styles.input}
-                value={user.phone_number}
-                onChangeText={(text) => handleChange('phone_number', text)}
-                placeholder="Số điện thoại"
-                keyboardType="phone-pad"
-              />
-              <TextInput
-                style={styles.input}
-                value={user.email}
-                onChangeText={(text) => handleChange('email', text)}
-                placeholder="Email"
-                keyboardType="email-address"
-              />
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={user.address}
-                onChangeText={(text) => handleChange('address', text)}
-                placeholder="Địa chỉ"
-                multiline
-                numberOfLines={3}
-              />
-              <TextInput
-                style={styles.input}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Mật khẩu mới"
-                secureTextEntry
-              />
-              <TextInput
-                style={styles.input}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Xác nhận mật khẩu"
-                secureTextEntry
-              />
-            </>
-          )}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
-          >
-            <Text style={styles.buttonText}>{isEditing ? 'Lưu' : 'Chỉnh sửa'}</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Lịch hẹn */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lịch hẹn sắp tới</Text>
-          {mockUpcomingAppointments.length === 0 ? (
-            <Text style={styles.emptyText}>Không có lịch hẹn nào.</Text>
-          ) : (
-            <FlatList
-              data={mockUpcomingAppointments}
-              renderItem={renderAppointmentItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          )}
-        </View>
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            {/* Profile Header */}
+            <View style={styles.profileHeader}>
+              <View style={styles.profileHeaderContent}>
+                <View style={styles.avatarContainer}>
+                  <Ionicons name="person-outline" size={32} color="#FFFFFF" />
+                </View>
+                <View style={styles.profileHeaderText}>
+                  <Text style={styles.profileName}>
+                    {userData.userName || "Chưa cập nhật"}
+                  </Text>
+                  <Text style={styles.profileEmail}>
+                    {userData.email || "Chưa cập nhật"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.profileHeaderActions}>
+                {isEditing ? (
+                  <View style={styles.editingActions}>
+                    <TouchableOpacity
+                      style={styles.saveButton}
+                      onPress={handleUpdate}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="checkmark-outline"
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                      <Text style={styles.actionButtonText}>Lưu</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={handleCancel}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="close-outline"
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                      <Text style={styles.actionButtonText}>Hủy</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={handleEdit}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>Chỉnh sửa</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
 
-        {/* Lịch sử khám */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lịch sử khám</Text>
-          {mockHistory.length === 0 ? (
-            <Text style={styles.emptyText}>Chưa có lịch sử khám.</Text>
-          ) : (
-            <FlatList
-              data={mockHistory}
-              renderItem={renderAppointmentItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          )}
-        </View>
+            {/* Profile Form */}
+            <View style={styles.profileForm}>
+              {/* User Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  Tên người dùng <Text style={styles.required}>*</Text>
+                </Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="person-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      !isEditing && styles.textInputReadonly,
+                    ]}
+                    value={formData.userName}
+                    onChangeText={(value) =>
+                      handleInputChange("userName", value)
+                    }
+                    editable={isEditing}
+                    placeholder="Nhập tên người dùng"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+              </View>
 
-        {/* Hồ sơ bệnh án */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hồ sơ bệnh án</Text>
-          <TouchableOpacity
-            style={[styles.button, styles.medicalRecordsButton]}
-            onPress={() => navigation.navigate('MedicalRecords')}
-          >
-            <Ionicons name="medical-outline" size={24} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Xem hồ sơ bệnh án</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+              {/* Gender */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Giới tính</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="people-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  {isEditing ? (
+                    <TextInput
+                      style={styles.textInput}
+                      value={formData.gender}
+                      onChangeText={(value) =>
+                        handleInputChange("gender", value)
+                      }
+                      placeholder="male, female, hoặc other"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  ) : (
+                    <Text style={[styles.textInput, styles.textInputReadonly]}>
+                      {getGenderDisplayText(formData.gender)}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Phone Number */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Số điện thoại</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="call-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      !isEditing && styles.textInputReadonly,
+                    ]}
+                    value={formData.phone_number}
+                    onChangeText={(value) =>
+                      handleInputChange("phone_number", value)
+                    }
+                    editable={isEditing}
+                    placeholder="Nhập số điện thoại"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
+
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <Text style={[styles.textInput, styles.textInputReadonly]}>
+                    {userData.email || "Chưa cập nhật"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Address */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Địa chỉ</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="location-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      !isEditing && styles.textInputReadonly,
+                    ]}
+                    value={formData.address}
+                    onChangeText={(value) =>
+                      handleInputChange("address", value)
+                    }
+                    editable={isEditing}
+                    placeholder="Nhập địa chỉ"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+              </View>
+
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Mô tả cá nhân</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="document-text-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={[styles.inputIcon, styles.textAreaIcon]}
+                  />
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      styles.textArea,
+                      !isEditing && styles.textInputReadonly,
+                    ]}
+                    value={formData.userDescription}
+                    onChangeText={(value) =>
+                      handleInputChange("userDescription", value)
+                    }
+                    editable={isEditing}
+                    placeholder="Nhập mô tả về bản thân"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+                </View>
+              </View>
+
+              {/* Error Display */}
+              {error && (
+                <View style={styles.errorDisplay}>
+                  <Text style={styles.errorDisplayText}>{error}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-export default PatientProfile;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#F3F4F6",
   },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  section: {
-    marginBottom: 28,
-    backgroundColor: '#f7f7f7',
-    borderRadius: 10,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#0D9488',
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 8,
-  },
-  fullName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#222',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  label: {
-    fontSize: 15,
-    color: '#444',
-    width: 110,
-    fontWeight: '500',
-  },
-  value: {
-    fontSize: 15,
-    color: '#222',
+  keyboardAvoidingView: {
     flex: 1,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
+  scrollView: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  errorIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  errorDescription: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  errorButton: {
+    backgroundColor: "#0D9488",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  errorButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  header: {
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#0D9488",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  profileCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    margin: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  profileHeader: {
+    backgroundColor: "#0D9488",
+    padding: 20,
+  },
+  profileHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  profileHeaderText: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  profileHeaderActions: {
+    alignItems: "flex-end",
+  },
+  editingActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 4,
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 4,
+  },
+  cancelButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 4,
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  profileForm: {
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 8,
   },
-  textArea: {
-    minHeight: 60,
-    textAlignVertical: 'top',
+  required: {
+    color: "#EF4444",
   },
-  button: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textAreaIcon: {
+    alignSelf: "flex-start",
     marginTop: 16,
-    backgroundColor: '#0D9488',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
   },
-  medicalRecordsButton: {
-    backgroundColor: '#007AFF',
-    marginTop: 0,
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
-    color: '#fff',
+  textInput: {
+    flex: 1,
+    paddingVertical: 16,
     fontSize: 16,
-    fontWeight: '600',
+    color: "#374151",
   },
-  appointmentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+  textInputReadonly: {
+    backgroundColor: "#F9FAFB",
+    color: "#6B7280",
   },
-  appointmentText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#222',
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+    paddingTop: 16,
   },
-  appointmentSubText: {
-    fontSize: 13,
-    color: '#666',
+  errorDisplay: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 2,
+    borderColor: "#FECACA",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
   },
-  status: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginLeft: 8,
-    minWidth: 80,
-    textAlign: 'center',
-  },
-  statusConfirmed: {
-    backgroundColor: '#D1FAE5',
-    color: '#047857',
-  },
-  statusPending: {
-    backgroundColor: '#FEF3C7',
-    color: '#B45309',
-  },
-  statusCompleted: {
-    backgroundColor: '#E0E7FF',
-    color: '#3730A3',
-  },
-  emptyText: {
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginVertical: 8,
+  errorDisplayText: {
+    color: "#B91C1C",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
+
+export default PatientProfile;

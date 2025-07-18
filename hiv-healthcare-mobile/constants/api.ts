@@ -1,4 +1,4 @@
-export const BASE_URL = "http://192.168.2.3:5000/api";
+export const BASE_URL = "http://192.168.2.122:5000/api";
 
 export const API_ENDPOINTS = {
   // ===== USER =====
@@ -22,4 +22,10 @@ export const API_ENDPOINTS = {
   SERVICE_BY_ID: (id: string) => `/services/${id}`,
   SERVICES_BY_CATEGORY: (categoryId: string) =>
     `/services/category/${categoryId}`,
+  // ===== BOOKING =====
+  BOOKINGS: "/bookings",
+  BOOKING_BY_ID: (id: string) => `/bookings/${id}`,
+  BOOKINGS_BY_DOCTOR_NAME: (doctorName: string) =>
+    `/bookings/doctor/${doctorName}`,
+  BOOKINGS_BY_USER_ID: (userId: string) => `/bookings/user/${userId}`,
 };

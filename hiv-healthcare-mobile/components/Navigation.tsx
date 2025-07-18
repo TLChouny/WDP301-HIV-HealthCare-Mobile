@@ -24,6 +24,7 @@ import ResetPassword from "../screens/auth/ResetPassword";
 import VerifyResetOTP from "../screens/auth/VerifyResetOTP";
 import ServiceByCategoryId from "../screens/common/ServiceByCategoryId";
 import ServiceDetail from "../screens/common/ServiceDetail";
+import BlogPage from "../screens/common/Blog";
 
 // Define navigation types
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type RootStackParamList = {
   MedicalRecords: undefined;
   PatientProfile: undefined;
   MedicationManagement: undefined;
+  Blog: undefined;
   ServiceByCategoryId: { categoryId: string; categoryName: string };
   ServiceDetail: { serviceId: string };
 };
@@ -137,6 +139,7 @@ export const Navigation = () => {
               component={ServiceByCategoryId}
             />
             <Stack.Screen name="ServiceDetail" component={ServiceDetail} />
+            <Stack.Screen name="Blog" component={BlogPage} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthStackNavigator} />
