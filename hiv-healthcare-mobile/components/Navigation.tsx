@@ -22,6 +22,8 @@ import MedicalRecords from "../screens/medical/MedicalRecords";
 import VerifyOTP from "../screens/auth/VerifyOTP";
 import ResetPassword from "../screens/auth/ResetPassword";
 import VerifyResetOTP from "../screens/auth/VerifyResetOTP";
+import ServiceByCategoryId from "../screens/common/ServiceByCategoryId";
+import ServiceDetail from "../screens/common/ServiceDetail";
 
 // Define navigation types
 export type RootStackParamList = {
@@ -33,6 +35,8 @@ export type RootStackParamList = {
   MedicalRecords: undefined;
   PatientProfile: undefined;
   MedicationManagement: undefined;
+  ServiceByCategoryId: { categoryId: string; categoryName: string };
+  ServiceDetail: { serviceId: string };
 };
 
 export type MainTabParamList = {
@@ -128,9 +132,13 @@ export const Navigation = () => {
             />
             <Stack.Screen name="MedicalRecords" component={MedicalRecords} />
             <Stack.Screen name="PatientProfile" component={PatientProfile} />
+            <Stack.Screen
+              name="ServiceByCategoryId"
+              component={ServiceByCategoryId}
+            />
+            <Stack.Screen name="ServiceDetail" component={ServiceDetail} />
           </>
         ) : (
-          // ✅ Chưa đăng nhập - hiển thị auth screens
           <Stack.Screen name="Auth" component={AuthStackNavigator} />
         )}
       </Stack.Navigator>

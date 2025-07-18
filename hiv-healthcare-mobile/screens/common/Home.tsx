@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../../contexts/AuthContext";
+import Header from "../../components/Header";
 
 // Update image imports to use correct paths
 const images = {
@@ -125,7 +126,7 @@ const Home: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with Login/Register Buttons - only show when not authenticated */}
+      <Header />
       {showAuthButtons && (
         <View style={styles.header}>
           <View style={styles.authButtonsContainer}>
@@ -437,7 +438,10 @@ const Home: React.FC = () => {
           <View style={styles.doctorsGrid}>
             {[
               { name: "BS. Nguyễn Văn A", role: "Chuyên Gia Điều Trị HIV" },
-              { name: "BS. Trần Thị B", role: "Chuyên Gia Tư Vấn Xét Nghiệm" },
+              {
+                name: "BS. Trần Thị B",
+                role: "Chuyên Gia Tư Vấn Xét Nghiệm",
+              },
               { name: "ThS. Lê Văn C", role: "Chuyên Viên Tâm Lý" },
               { name: "BS. Phạm Thị D", role: "Chuyên Gia Dinh Dưỡng" },
             ].map((doctor, index) => (
