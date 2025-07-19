@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { BASE_URL, API_ENDPOINTS } from '../constants/api';
-import type { Booking } from '../types/booking';
+import type { Booking } from '../types/Booking';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

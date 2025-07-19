@@ -19,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../contexts/AuthContext";
 import { getBookingsByUserId } from "../../api/bookingApi";
-import { Booking } from "../../types/booking";
+import { Booking } from "../../types/Booking";
 
 const { width } = Dimensions.get("window");
 

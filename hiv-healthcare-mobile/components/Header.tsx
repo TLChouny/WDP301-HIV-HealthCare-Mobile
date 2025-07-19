@@ -19,6 +19,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { getAllCategories } from "../api/categoryApi";
 import { Category } from "../types/Category";
+import type { RootStackParamList } from "./Navigation";
 
 interface Notification {
   _id: string;
@@ -40,18 +41,7 @@ interface Notification {
   createdAt: string;
 }
 
-type RootStackParamList = {
-  Home: undefined;
-  ServiceByCategoryId: { categoryId: string; categoryName: string };
-  Doctors: undefined;
-  Blog: undefined;
-  About: undefined;
-  Contact: undefined;
-  Login: undefined;
-  Register: undefined;
-  Profile: undefined;
-  Appointment: undefined;
-};
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

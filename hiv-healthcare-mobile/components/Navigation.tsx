@@ -25,11 +25,13 @@ import VerifyResetOTP from "../screens/auth/VerifyResetOTP";
 import ServiceByCategoryId from "../screens/common/ServiceByCategoryId";
 import ServiceDetail from "../screens/common/ServiceDetail";
 import BlogPage from "../screens/common/Blog";
+import ContactPage from "../screens/common/Contact";
+import AboutPage from "../screens/common/About";
+import DoctorsPage from "../screens/common/Doctors";
 
 // Define navigation types
 export type RootStackParamList = {
   Auth: undefined;
-  Register: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   AppointmentBooking: undefined;
   OnlineConsultation: undefined;
@@ -37,6 +39,14 @@ export type RootStackParamList = {
   PatientProfile: undefined;
   MedicationManagement: undefined;
   Blog: undefined;
+  Contact: undefined;
+  Home: undefined;
+  Doctors: undefined;
+  About: undefined;
+  Login: undefined;
+  Register: undefined;
+  Profile: undefined;
+  Appointment: undefined;
   ServiceByCategoryId: { categoryId: string; categoryName: string };
   ServiceDetail: { serviceId: string };
 };
@@ -140,6 +150,9 @@ export const Navigation = () => {
             />
             <Stack.Screen name="ServiceDetail" component={ServiceDetail} />
             <Stack.Screen name="Blog" component={BlogPage} />
+            <Stack.Screen name="Contact" component={ContactPage} />
+            <Stack.Screen name="About" component={AboutPage} />
+            <Stack.Screen name="Doctors" component={DoctorsPage} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthStackNavigator} />
