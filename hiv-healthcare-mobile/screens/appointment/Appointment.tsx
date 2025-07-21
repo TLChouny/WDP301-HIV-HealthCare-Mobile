@@ -109,6 +109,8 @@ const Appointment: React.FC = () => {
         return "Đã điểm danh";
       case "completed":
         return "Hoàn thành";
+      case "re-examination":
+        return "Tái khám";
       case "cancelled":
         return "Đã hủy";
       case "paid":
@@ -130,6 +132,8 @@ const Appointment: React.FC = () => {
         return { bg: "#E0E7FF", text: "#3730A3", border: "#C7D2FE" };
       case "checked-in":
         return { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" };
+      case "re-examination":
+        return { bg: "#EDE9FE", text: "#7C3AED", border: "#DDD6FE" };
       case "paid":
         return { bg: "#FED7AA", text: "#C2410C", border: "#FDBA74" };
       default:
@@ -145,6 +149,8 @@ const Appointment: React.FC = () => {
       case "completed":
       case "checked-in":
         return "checkmark-circle-outline";
+      case "re-examination":
+        return "refresh-outline";
       case "cancelled":
         return "close-circle-outline";
       case "paid":

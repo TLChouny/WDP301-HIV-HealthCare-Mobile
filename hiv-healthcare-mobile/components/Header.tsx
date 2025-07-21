@@ -161,6 +161,8 @@ const Header: React.FC = () => {
         return { bg: "#FEF3C7", text: "#B45309" };
       case "completed":
         return { bg: "#E0E7FF", text: "#3730A3" };
+      case "re-examination":
+        return { bg: "#EDE9FE", text: "#7C3AED" };
       default:
         return { bg: "#F3F4F6", text: "#6B7280" };
     }
@@ -172,8 +174,32 @@ const Header: React.FC = () => {
         return "Đã xác nhận";
       case "pending":
         return "Chờ xác nhận";
+      case "cancelled":
+        return "Đã huỷ";
+      case "checked-in":
+        return "Đã điểm danh";
+      case "checked-out":
+        return "Đã thanh toán";
       case "completed":
         return "Hoàn thành";
+      case "paid":
+        return "Đã thanh toán";
+      case "re-examination":
+        return "Tái khám";
+      case "all":
+        return "Tất cả trạng thái";
+      case "waiting":
+        return "Đang chờ";
+      case "processing":
+        return "Đang xử lý";
+      case "failed":
+        return "Thất bại";
+      case "success":
+        return "Thành công";
+      case "refunded":
+        return "Đã hoàn tiền";
+      case "expired":
+        return "Đã hết hạn";
       default:
         return "Không xác định";
     }
