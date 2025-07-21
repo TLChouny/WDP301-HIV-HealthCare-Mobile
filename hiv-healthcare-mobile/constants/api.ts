@@ -1,4 +1,4 @@
-export const BASE_URL = "http://172.16.16.51:5000/api";
+export const BASE_URL = "http://192.168.2.3:5000/api";
 
 export const API_ENDPOINTS = {
   // ===== USER =====
@@ -28,4 +28,11 @@ export const API_ENDPOINTS = {
   BOOKINGS_BY_DOCTOR_NAME: (doctorName: string) =>
     `/bookings/doctor/${doctorName}`,
   BOOKINGS_BY_USER_ID: (userId: string) => `/bookings/user/${userId}`,
+
+  // ===== NOTIFICATION =====
+  NOTIFICATIONS: "/notifications",
+  NOTIFICATION_BY_ID: (id: string) => `/notifications/${id}`,
+  NOTIFICATIONS_BY_USER_ID: (userId: string) => `/notifications/user/${userId}`,
+  //
+  RESULTS_BY_USER_ID: (userId: string) => `/results/user/${userId}`,
 };

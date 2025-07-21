@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../contexts/AuthContext";
-import { getBookingsByUserId } from "../../api/bookingApi";
+import { deleteBooking, getBookingsByUserId } from "../../api/bookingApi";
 import { Booking } from "../../types/Booking";
 
 const { width } = Dimensions.get("window");
@@ -42,16 +42,6 @@ const Appointment: React.FC = () => {
     const res = await getBookingsByUserId(userId);
     if (res) setAppointments(res);
   };
-
-  const removeBooking = async (id: string): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 500);
-    });
-  };
-
-  const createPayment = async () => {};
 
   useEffect(() => {
     if (user) {
@@ -86,7 +76,7 @@ const Appointment: React.FC = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await removeBooking(appointment._id);
+              await deleteBooking(appointment._id);
               setAppointments((prev) =>
                 prev.filter((appt) => appt._id !== appointment._id)
               );
@@ -191,7 +181,6 @@ const Appointment: React.FC = () => {
     statusOptions.find((option) => option.value === selectedStatus)?.label ||
     "Tất cả trạng thái";
 
-  // Filter appointments by status
   const filteredAppointments =
     selectedStatus === "all"
       ? appointments

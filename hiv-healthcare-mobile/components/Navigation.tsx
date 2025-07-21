@@ -33,7 +33,7 @@ import DoctorsPage from "../screens/common/Doctors";
 export type RootStackParamList = {
   Auth: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
-  AppointmentBooking: undefined;
+  AppointmentBooking: { serviceId: string };
   OnlineConsultation: undefined;
   MedicalRecords: undefined;
   PatientProfile: undefined;

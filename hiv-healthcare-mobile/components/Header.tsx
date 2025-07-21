@@ -1,5 +1,5 @@
 // components/Layout/Header.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,28 +20,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { getAllCategories } from "../api/categoryApi";
 import { Category } from "../types/Category";
 import type { RootStackParamList } from "./Navigation";
-
-interface Notification {
-  _id: string;
-  notiName: string;
-  notiDescription?: string;
-  bookingId: {
-    serviceId: {
-      serviceName: string;
-      price: number;
-    };
-    status: string;
-    startTime: string;
-    endTime: string;
-    doctorName?: string;
-    userId: {
-      userName: string;
-    };
-  };
-  createdAt: string;
-}
-
-
+import { getNotificationsByUserId } from "../api/notifycation";
+import { Notification } from "../types/Notification";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -55,46 +35,45 @@ const Header: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isServicesExpanded, setIsServicesExpanded] = useState(false);
-  const [selectedNotification, setSelectedNotification] =
-    useState<Notification | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [showNotificationDetail, setShowNotificationDetail] = useState(false);
 
   // Animation values
-  const drawerAnimation = new Animated.Value(-DRAWER_WIDTH);
-  const overlayAnimation = new Animated.Value(0);
+  const [drawerAnimation] = useState(new Animated.Value(-DRAWER_WIDTH));
+  const [overlayAnimation] = useState(new Animated.Value(0));
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [notifications, setNotification] = useState<Notification[]>([]);
+
+  // Fetch data
   useEffect(() => {
     const fetchCategory = async () => {
-      const res = await getAllCategories();
-      if (res.length) {
-        setCategories(res);
+      try {
+        const res = await getAllCategories();
+        if (res.length) {
+          setCategories(res);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
       }
     };
-    fetchCategory();
-  }, []);
-  const [notifications] = useState<Notification[]>([
-    {
-      _id: "1",
-      notiName: "Lịch hẹn sắp tới",
-      notiDescription: "Bạn có lịch hẹn vào lúc 10:00 ngày mai",
-      bookingId: {
-        serviceId: {
-          serviceName: "Tư vấn xét nghiệm HIV",
-          price: 0,
-        },
-        status: "confirmed",
-        startTime: "10:00",
-        endTime: "11:00",
-        doctorName: "BS. Nguyễn Văn A",
-        userId: {
-          userName: "Người dùng",
-        },
-      },
-      createdAt: new Date().toISOString(),
-    },
-  ]);
 
+    const fetchNoty = async () => {
+      try {
+        if (user && user._id) {
+          const res = await getNotificationsByUserId(user._id);
+          if (res && res.data) setNotification(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchCategory();
+    fetchNoty();
+  }, [user?._id]);
+
+  // Animation effect
   useEffect(() => {
     if (isDrawerOpen) {
       Animated.parallel([
@@ -123,17 +102,29 @@ const Header: React.FC = () => {
         }),
       ]).start();
     }
-  }, [isDrawerOpen]);
+  }, [isDrawerOpen, drawerAnimation, overlayAnimation]);
 
-  const toggleDrawer = () => {
-    setIsDrawerOpen(!isDrawerOpen);
-  };
+  // Event handlers
+  const toggleDrawer = useCallback(() => {
+    setIsDrawerOpen(prev => !prev);
+  }, []);
 
-  const closeDrawer = () => {
+  const closeDrawer = useCallback(() => {
     setIsDrawerOpen(false);
-  };
+    // Reset services expanded state when drawer closes
+    setIsServicesExpanded(false);
+  }, []);
 
-  const handleLogout = () => {
+  // Fixed: Separate handler for services expansion that doesn't close drawer
+  const toggleServicesExpansion = useCallback((e?: any) => {
+    // Stop event propagation to prevent any parent handlers
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+    setIsServicesExpanded(prev => !prev);
+  }, []);
+
+  const handleLogout = useCallback(() => {
     Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
       { text: "Hủy", style: "cancel" },
       {
@@ -146,25 +137,23 @@ const Header: React.FC = () => {
         },
       },
     ]);
-  };
+  }, [logout, closeDrawer]);
 
-  const navigateToScreen = (
-    screenName: keyof RootStackParamList,
-    params?: any
-  ) => {
+  const navigateToScreen = useCallback((screenName: keyof RootStackParamList, params?: any) => {
     closeDrawer();
     navigation.navigate(screenName, params);
-  };
+  }, [navigation, closeDrawer]);
 
-  const formatPrice = (price: number) => {
+  // Utility functions
+  const formatPrice = useCallback((price: number) => {
     if (price === 0) return "Miễn phí";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case "confirmed":
         return { bg: "#D1FAE5", text: "#047857" };
@@ -175,9 +164,9 @@ const Header: React.FC = () => {
       default:
         return { bg: "#F3F4F6", text: "#6B7280" };
     }
-  };
+  }, []);
 
-  const getStatusText = (status: string) => {
+  const getStatusText = useCallback((status: string) => {
     switch (status) {
       case "confirmed":
         return "Đã xác nhận";
@@ -188,7 +177,19 @@ const Header: React.FC = () => {
       default:
         return "Không xác định";
     }
-  };
+  }, []);
+
+  // Handle notification actions
+  const handleNotificationPress = useCallback((notification: Notification) => {
+    setSelectedNotification(notification);
+    setShowNotificationDetail(true);
+    setIsNotificationOpen(false);
+  }, []);
+
+  const closeNotificationDetail = useCallback(() => {
+    setShowNotificationDetail(false);
+    setSelectedNotification(null);
+  }, []);
 
   return (
     <>
@@ -235,6 +236,7 @@ const Header: React.FC = () => {
         </View>
       </SafeAreaView>
 
+      {/* Overlay */}
       {isDrawerOpen && (
         <Animated.View
           style={[
@@ -282,6 +284,7 @@ const Header: React.FC = () => {
           <ScrollView
             style={styles.menuItems}
             showsVerticalScrollIndicator={false}
+            bounces={false}
           >
             {/* Home */}
             <TouchableOpacity
@@ -293,10 +296,10 @@ const Header: React.FC = () => {
               <Text style={styles.menuItemText}>Trang chủ</Text>
             </TouchableOpacity>
 
-            {/* Services */}
+            {/* Services - Fixed implementation */}
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => setIsServicesExpanded(!isServicesExpanded)}
+              onPress={toggleServicesExpansion}
               activeOpacity={0.7}
             >
               <Ionicons name="medical-outline" size={20} color="#0D9488" />
@@ -305,29 +308,39 @@ const Header: React.FC = () => {
                 name={isServicesExpanded ? "chevron-up" : "chevron-down"}
                 size={16}
                 color="#6B7280"
+                style={styles.chevronIcon}
               />
             </TouchableOpacity>
 
-            {/* Services Submenu */}
+            {/* Services Submenu - Enhanced */}
             {isServicesExpanded && (
               <View style={styles.submenu}>
-                {categories?.map((category) => (
-                  <TouchableOpacity
-                    key={category._id}
-                    style={styles.submenuItem}
-                    onPress={() =>
-                      navigateToScreen("ServiceByCategoryId", {
-                        categoryId: category._id,
-                        categoryName: category.categoryName,
-                      })
-                    }
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.submenuItemText}>
-                      {category.categoryName}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <TouchableOpacity
+                      key={category._id}
+                      style={styles.submenuItem}
+                      onPress={() =>
+                        navigateToScreen("ServiceByCategoryId", {
+                          categoryId: category._id,
+                          categoryName: category.categoryName,
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.submenuItemIcon}>
+                        <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                      </View>
+                      <Text style={styles.submenuItemText}>
+                        {category.categoryName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.submenuItemLoading}>
+                    <Text style={styles.submenuItemLoadingText}>Đang tải...</Text>
+                  </View>
+                )}
               </View>
             )}
 
@@ -433,7 +446,7 @@ const Header: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.notificationList}>
+            <ScrollView style={styles.notificationList} showsVerticalScrollIndicator={false}>
               {notifications.length === 0 ? (
                 <View style={styles.emptyNotifications}>
                   <Ionicons
@@ -450,18 +463,14 @@ const Header: React.FC = () => {
                   <TouchableOpacity
                     key={notification._id}
                     style={styles.notificationItem}
-                    onPress={() => {
-                      setSelectedNotification(notification);
-                      setShowNotificationDetail(true);
-                      setIsNotificationOpen(false);
-                    }}
+                    onPress={() => handleNotificationPress(notification)}
                     activeOpacity={0.7}
                   >
                     <View style={styles.notificationItemContent}>
                       <Text style={styles.notificationItemTitle}>
                         {notification.notiName}
                       </Text>
-                      <Text style={styles.notificationItemDescription}>
+                      <Text style={styles.notificationItemDescription} numberOfLines={2}>
                         {notification.notiDescription}
                       </Text>
                       <Text style={styles.notificationItemService}>
@@ -507,7 +516,7 @@ const Header: React.FC = () => {
         visible={showNotificationDetail}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowNotificationDetail(false)}
+        onRequestClose={closeNotificationDetail}
       >
         <View style={styles.modalContainer}>
           <View style={styles.notificationDetailModal}>
@@ -516,7 +525,7 @@ const Header: React.FC = () => {
                 Chi tiết thông báo
               </Text>
               <TouchableOpacity
-                onPress={() => setShowNotificationDetail(false)}
+                onPress={closeNotificationDetail}
                 activeOpacity={0.7}
               >
                 <Ionicons name="close" size={24} color="#374151" />
@@ -524,7 +533,10 @@ const Header: React.FC = () => {
             </View>
 
             {selectedNotification && (
-              <ScrollView style={styles.notificationDetailContent}>
+              <ScrollView 
+                style={styles.notificationDetailContent}
+                showsVerticalScrollIndicator={false}
+              >
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Tên thông báo:</Text>
                   <Text style={styles.detailValue}>
@@ -674,19 +686,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
   },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#0D9488",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  userAvatarText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
   overlay: {
     position: "absolute",
     top: 0,
@@ -752,54 +751,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#F9FAFB",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  userInfoAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#0D9488",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  userInfoAvatarText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  userInfoText: {
-    flex: 1,
-  },
-  userInfoName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 2,
-  },
-  userInfoEmail: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  guestInfo: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#F9FAFB",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  guestInfoText: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-  },
   menuItems: {
     flex: 1,
     paddingVertical: 8,
@@ -819,21 +770,42 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: "500",
   },
+  chevronIcon: {
+    marginLeft: 8,
+  },
   submenu: {
-    paddingLeft: 32,
+    paddingLeft: 16,
     backgroundColor: "#F9FAFB",
     marginHorizontal: 8,
     borderRadius: 8,
     marginBottom: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: "#0D9488",
   },
   submenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
+  },
+  submenuItemIcon: {
+    marginRight: 8,
   },
   submenuItemText: {
     fontSize: 14,
     color: "#6B7280",
     fontWeight: "500",
+    flex: 1,
+  },
+  submenuItemLoading: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  submenuItemLoadingText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    fontStyle: "italic",
   },
   appointmentButton: {
     flexDirection: "row",
@@ -844,6 +816,11 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     paddingVertical: 12,
     borderRadius: 8,
+    shadowColor: "#0D9488",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   appointmentButtonText: {
     color: "#FFFFFF",
@@ -934,6 +911,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#9CA3AF",
     marginTop: 12,
+    textAlign: "center",
   },
   notificationItem: {
     flexDirection: "row",
@@ -959,6 +937,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     marginBottom: 4,
+    lineHeight: 20,
   },
   notificationItemService: {
     fontSize: 14,
@@ -1012,6 +991,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#6B7280",
     marginBottom: 4,
+    textTransform: "uppercase",
   },
   detailValue: {
     fontSize: 16,

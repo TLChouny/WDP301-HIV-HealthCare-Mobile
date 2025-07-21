@@ -14,12 +14,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../../contexts/AuthContext";
 import { User } from "../../types/User";
 
 type Gender = "male" | "female" | "other";
 
+type RootStackParamList = {
+  PatientProfile: undefined;
+  MedicalRecords: undefined;
+  MainTabs: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const PatientProfile: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { user, getUserById, updateUser, logout, loading } = useAuth();
   const [userData, setUserData] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -477,6 +488,67 @@ const PatientProfile: React.FC = () => {
                 </View>
               )}
             </View>
+
+            {/* Medical Records Section */}
+            <View style={styles.medicalRecordsSection}>
+              <View style={styles.medicalRecordsSectionHeader}>
+                <View style={styles.medicalRecordsSectionHeaderLeft}>
+                  <View style={styles.medicalRecordsIcon}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={20}
+                      color="#0D9488"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.medicalRecordsSectionTitle}>
+                      Hồ sơ y tế
+                    </Text>
+                    <Text style={styles.medicalRecordsSectionSubtitle}>
+                      Xem lịch sử khám bệnh và kết quả điều trị
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.medicalRecordsButton}
+                onPress={() => navigation.navigate("MedicalRecords")}
+                activeOpacity={0.8}
+              >
+                <View style={styles.medicalRecordsButtonContent}>
+                  <View style={styles.medicalRecordsButtonLeft}>
+                    <View style={styles.medicalRecordsButtonIcon}>
+                      <Ionicons
+                        name="medical-outline"
+                        size={24}
+                        color="#ffffff"
+                      />
+                    </View>
+                    <View style={styles.medicalRecordsButtonText}>
+                      <Text style={styles.medicalRecordsButtonTitle}>
+                        Xem Hồ sơ bệnh án
+                      </Text>
+                      <Text style={styles.medicalRecordsButtonSubtitle}>
+                        Quản lý và theo dõi lịch sử khám bệnh
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.medicalRecordsButtonArrow}>
+                    <Ionicons
+                      name="arrow-forward-outline"
+                      size={20}
+                      color="#ffffff"
+                    />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -712,6 +784,136 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     fontSize: 14,
     fontWeight: "500",
+  },
+  // Medical Records Section Styles
+  medicalRecordsSection: {
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    paddingTop: 20,
+  },
+  medicalRecordsSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  medicalRecordsSectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  medicalRecordsIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#F0FDFA",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  medicalRecordsSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 2,
+  },
+  medicalRecordsSectionSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  medicalRecordsButton: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: "#0D9488",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#0D9488",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  medicalRecordsButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  medicalRecordsButtonLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  medicalRecordsButtonIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  medicalRecordsButtonText: {
+    flex: 1,
+  },
+  medicalRecordsButtonTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+    marginBottom: 4,
+  },
+  medicalRecordsButtonSubtitle: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.8)",
+    lineHeight: 20,
+  },
+  medicalRecordsButtonArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  quickStatsContainer: {
+    flexDirection: "row",
+    backgroundColor: "#F9FAFB",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    padding: 16,
+  },
+  quickStatItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickStatIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  quickStatLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 4,
+    lineHeight: 16,
+  },
+  quickStatValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#374151",
+    textAlign: "center",
+  },
+  quickStatDivider: {
+    width: 1,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 12,
   },
 });
 
