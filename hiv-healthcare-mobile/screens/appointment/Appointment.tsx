@@ -430,7 +430,7 @@ const Appointment: React.FC = () => {
                 <View style={styles.viewModalIcon}>
                   <Ionicons name="calendar-outline" size={32} color="#FFFFFF" />
                 </View>
-                <Text style={styles.viewModalTitle}>Chi tiết lịch hẹn</Text>
+                <Text style={styles.viewModalTitle}>Chi tiết lịch hẹnn</Text>
               </View>
 
               <ScrollView style={styles.viewModalContent}>
@@ -460,9 +460,19 @@ const Appointment: React.FC = () => {
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Meeting Link:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedAppointment.meetLink || "Không có"}
-                    </Text>
+                    {selectedAppointment.meetLink ? (
+                      <Text
+                        style={styles.linkValue}
+                        onPress={() =>
+                          selectedAppointment.meetLink &&
+                          Linking.openURL(selectedAppointment.meetLink)
+                        }
+                      >
+                        Tham gia ngay
+                      </Text>
+                    ) : (
+                      <Text style={styles.detailValue}>Không có</Text>
+                    )}
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Trạng thái:</Text>
@@ -948,6 +958,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#374151",
     textAlign: "right",
+    maxWidth: "60%",
+  },
+  linkValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0D9488",
+    textDecorationLine: "underline",
+    textAlign: "right",
+    flexShrink: 1,
     maxWidth: "60%",
   },
   detailStatusBadge: {

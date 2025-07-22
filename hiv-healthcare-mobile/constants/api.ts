@@ -1,4 +1,4 @@
-export const BASE_URL = "http://10.87.64.149:5000/api";
+export const BASE_URL = "http://172.20.10.2:5000/api";
 
 export const API_ENDPOINTS = {
   // ===== USER =====
