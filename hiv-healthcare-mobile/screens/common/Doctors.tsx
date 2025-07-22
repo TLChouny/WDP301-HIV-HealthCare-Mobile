@@ -102,7 +102,11 @@ const Doctors: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Back Button */}
       <View style={styles.backButtonContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate("MainTabs")} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("MainTabs")}
+          style={styles.backButton}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        >
           <Ionicons name="arrow-back" size={28} color="#0D9488" />
         </TouchableOpacity>
       </View>
@@ -233,19 +237,19 @@ const styles = StyleSheet.create({
   },
   backButtonContainer: {
     position: "absolute",
-    top: 16,
-    left: 16,
+    top: 20,
+    left: 20,
     zIndex: 10,
   },
   backButton: {
     backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 6,
+    borderRadius: 26,
+    padding: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 5,
   },
   heroSection: {
     backgroundColor: "#0F766E",
