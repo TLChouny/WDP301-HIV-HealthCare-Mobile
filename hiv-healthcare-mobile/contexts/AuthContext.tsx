@@ -1,9 +1,8 @@
+// AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types/User";
-
 import {
   login as apiLogin,
   logout as apiLogout,
@@ -14,7 +13,6 @@ import {
   verifyResetOTP as apiVerifyResetOTP,
   resetPassword as apiResetPassword,
 } from "../api/authApi";
-
 import {
   getAllUsers as apiGetAllUsers,
   getUserById as apiGetUserById,
@@ -45,15 +43,9 @@ interface JwtPayload {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (
-    data: { email: string; password: string },
-    navigation?: any
-  ) => Promise<void>;
-  logout: (navigation?: any) => Promise<void>;
+  login: (data: { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
-  isAdmin: boolean;
-  isDoctor: boolean;
-  isStaff: boolean;
   register: (data: {
     userName?: string;
     email: string;
@@ -91,54 +83,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const decodeAndValidateToken = (token: string): User => {
-    try {
-      if (!token || typeof token !== "string") {
-        throw new Error("Token không hợp lệ hoặc trống");
-      }
-
-      const decoded: JwtPayload = jwtDecode(token);
-      console.log("Decoded token:", decoded);
-
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp && decoded.exp < currentTime) {
-        throw new Error("Token đã hết hạn");
-      }
-
-      const userData = decoded.user || {
-        _id: decoded.id || decoded._id || "unknown",
-        userName: decoded.userName || "Unknown User",
-        email: decoded.email || "no-email@example.com",
-        role: decoded.role || "user",
-        isVerified: decoded.isVerified ?? false,
-        createdAt: decoded.createdAt || new Date().toISOString(),
-        updatedAt: decoded.updatedAt || new Date().toISOString(),
-      };
-
-      return userData as User;
-    } catch (error: any) {
-      console.error("Lỗi xác thực token:", error.message);
-      throw error;
+    if (!token || typeof token !== "string") {
+      throw new Error("Token không hợp lệ hoặc trống");
     }
+
+    const decoded: JwtPayload = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    if (decoded.exp && decoded.exp < currentTime) {
+      throw new Error("Token đã hết hạn");
+    }
+
+    const userData = decoded.user || {
+      _id: decoded.id || decoded._id || "unknown",
+      userName: decoded.userName || "Unknown User",
+      email: decoded.email || "no-email@example.com",
+      role: decoded.role || "user",
+      isVerified: decoded.isVerified ?? false,
+      createdAt: decoded.createdAt || new Date().toISOString(),
+      updatedAt: decoded.updatedAt || new Date().toISOString(),
+    };
+
+    return userData as User;
   };
 
   const initializeAuth = async () => {
     try {
-      setLoading(true);
-
       const token = await getToken();
-      console.log("Token từ AsyncStorage:", token);
-
       if (token) {
-        // Validate token
         const userData = decodeAndValidateToken(token);
         setUser(userData);
       } else {
-        // Nếu không có token, kiểm tra user data đã lưu
         const storedUser = await getUser();
-        if (storedUser) {
-          // Nếu có user data nhưng không có token, clear data
-          await removeToken();
-        }
+        if (storedUser) await removeToken();
         setUser(null);
       }
     } catch (error: any) {
@@ -149,6 +125,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
 
   const refreshUserData = async () => {
     try {
@@ -165,55 +145,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const navigateBasedOnRole = (userData: User, navigation?: any) => {
-    if (!navigation) return;
-
-    switch (userData.role) {
-      case "admin":
-        navigation.navigate("AdminDashboard");
-        break;
-      case "doctor":
-        navigation.navigate("DoctorDashboard");
-        break;
-      case "staff":
-        navigation.navigate("StaffDashboard");
-        break;
-      default:
-        navigation.navigate("MainTabs");
-        break;
-    }
-  };
-
-  useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  if (loading) {
-    return null;
-  }
-
-  const login = async (
-    data: { email: string; password: string },
-    navigation?: any
-  ) => {
+  const login = async (data: { email: string; password: string }) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await apiLogin(data);
-
+      await apiLogin(data);
       const token = await getToken();
       if (!token) throw new Error("Không thể lưu token");
-
       const userData = decodeAndValidateToken(token);
       setUser(userData);
-
-      if (navigation) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainTabs" }],
-        });
-      }
-
-      console.log("Đăng nhập thành công, đã chuyển đến MainTabs");
+      await storeUser(userData);
     } catch (error: any) {
       console.error("Lỗi đăng nhập:", error.message);
       throw error;
@@ -222,17 +162,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = async (navigation?: any) => {
+  const logout = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await apiLogout();
     } catch (error) {
       console.error("Lỗi đăng xuất:", error);
     } finally {
       setUser(null);
-      if (navigation) {
-        navigation.navigate("Login");
-      }
+      await removeToken();
       setLoading(false);
     }
   };
@@ -244,128 +182,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     phone_number?: string;
     role?: string;
   }) => {
-    try {
-      await apiRegister(data);
-    } catch (error: any) {
-      console.error("Lỗi đăng ký:", error.message);
-      throw error;
-    }
+    await apiRegister(data);
   };
 
   const verifyOTP = async (data: { email: string; otp: string }) => {
-    try {
-      const response = await apiVerifyOTP(data);
-
-      const token = await getToken();
-      if (token) {
-        const userData = decodeAndValidateToken(token);
-        setUser(userData);
-      }
-    } catch (error: any) {
-      console.error("Lỗi xác minh OTP:", error.message);
-      throw error;
+    await apiVerifyOTP(data);
+    const token = await getToken();
+    if (token) {
+      const userData = decodeAndValidateToken(token);
+      setUser(userData);
     }
   };
 
   const resendOTP = async (data: { email: string }) => {
-    try {
-      await apiResendOTP(data);
-    } catch (error: any) {
-      console.error("Lỗi gửi lại OTP:", error.message);
-      throw error;
-    }
+    await apiResendOTP(data);
   };
 
   const getAllUsers = async (): Promise<User[]> => {
-    try {
-      const response = await apiGetAllUsers();
-      return response.data || response;
-    } catch (error: any) {
-      console.error("Lỗi lấy danh sách người dùng:", error.message);
-      throw error;
-    }
+    const response = await apiGetAllUsers();
+    return response.data || response;
   };
 
   const forgotPassword = async (data: { email: string }) => {
-    try {
-      await apiForgotPassword(data);
-    } catch (error: any) {
-      console.error("Lỗi yêu cầu đặt lại mật khẩu:", error.message);
-      throw error;
-    }
+    await apiForgotPassword(data);
   };
 
   const verifyResetOTP = async (data: {
     email: string;
     otp: string;
   }): Promise<VerifyResetOTPResponse> => {
-    try {
-      const response = await apiVerifyResetOTP(data);
-      return response;
-    } catch (error: any) {
-      console.error("Lỗi xác minh OTP đặt lại mật khẩu:", error.message);
-      throw error;
-    }
+    const response = await apiVerifyResetOTP(data);
+    return response;
   };
 
   const resetPassword = async (data: {
     resetToken: string;
     newPassword: string;
   }) => {
-    try {
-      const response = await apiResetPassword(data);
-
-      if (response.token) {
-        await storeToken(response.token);
-        const userData = decodeAndValidateToken(response.token);
-        setUser(userData);
-        await storeUser(userData);
-      }
-    } catch (error: any) {
-      console.error("Lỗi đặt lại mật khẩu:", error.message);
-      throw error;
+    const response = await apiResetPassword(data);
+    if (response.token) {
+      await storeToken(response.token);
+      const userData = decodeAndValidateToken(response.token);
+      setUser(userData);
+      await storeUser(userData);
     }
   };
 
   const getUserById = async (id: string): Promise<User> => {
-    try {
-      const response = await apiGetUserById(id);
-      return response.data || response;
-    } catch (error: any) {
-      console.error("Lỗi lấy thông tin người dùng:", error.message);
-      throw error;
-    }
+    const response = await apiGetUserById(id);
+    return response.data || response;
   };
 
   const updateUser = async (id: string, data: any) => {
-    try {
-      const response = await apiUpdateUser(id, data);
-
-      if (user && user._id === id) {
-        const updatedUser = response.data || response;
-        setUser(updatedUser);
-        await storeUser(updatedUser);
-      }
-
-      return response;
-    } catch (error: any) {
-      console.error("Lỗi cập nhật người dùng:", error.message);
-      throw error;
+    const response = await apiUpdateUser(id, data);
+    if (user && user._id === id) {
+      const updatedUser = response.data || response;
+      setUser(updatedUser);
+      await storeUser(updatedUser);
     }
+    return response;
   };
 
   const deleteUser = async (id: string) => {
-    try {
-      await apiDeleteUser(id);
-
-      if (user && user._id === id) {
-        console.log("Xóa người dùng hiện tại, thực hiện logout");
-        setUser(null);
-        await removeToken();
-      }
-    } catch (error: any) {
-      console.error("Lỗi xóa người dùng:", error.message);
-      throw error;
+    await apiDeleteUser(id);
+    if (user && user._id === id) {
+      setUser(null);
+      await removeToken();
     }
   };
 
@@ -375,9 +257,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === "admin",
-    isDoctor: user?.role === "doctor",
-    isStaff: user?.role === "staff",
     register,
     verifyOTP,
     resendOTP,
@@ -391,6 +270,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     refreshUserData,
   };
 
+  if (loading) return null;
+
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
@@ -398,8 +279,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth phải được sử dụng trong AuthProvider");
-  }
+  if (!context) throw new Error("useAuth phải được sử dụng trong AuthProvider");
   return context;
 };
