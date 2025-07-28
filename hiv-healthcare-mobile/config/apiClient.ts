@@ -4,7 +4,7 @@ import { BASE_URL } from "../constants/api";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // Timeout 10 giây
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -17,9 +17,7 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (error) {
-      console.error("Error getting token from AsyncStorage:", error);
-    }
+    } catch (error) {}
     return config;
   },
   (error: any) => Promise.reject(error)
@@ -32,9 +30,7 @@ apiClient.interceptors.response.use(
       try {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("user");
-      } catch (storageError) {
-        console.error("Error clearing storage:", storageError);
-      }
+      } catch (storageError) {}
     }
     return Promise.reject(error);
   }
