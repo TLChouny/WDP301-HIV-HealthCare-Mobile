@@ -1,230 +1,382 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  Image,
   StyleSheet,
-  Dimensions,
+  ActivityIndicator,
+  Linking,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { getAllUsers } from "../../api/userApi";
+import { User, Certification, Experience } from "../../types/User";
 
-interface DoctorCategory {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  path: string;
-  color: string[];
+interface AccordionState {
+  personal: boolean;
+  cert: boolean;
+  exp: boolean;
 }
 
-interface FeatureItem {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
+interface OpenAccordions {
+  [doctorId: string]: AccordionState;
 }
 
-type RootStackParamList = {
-  Doctors: undefined;
-  DoctorsByCategory: { categoryId: number; categoryTitle: string };
-  MainTabs: undefined;
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return "Chưa cập nhật";
+  return new Date(dateString).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const { width } = Dimensions.get("window");
-
 const Doctors: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const [doctors, setDoctors] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [openAccordions, setOpenAccordions] = useState<OpenAccordions>({});
 
-  const doctorCategories: DoctorCategory[] = [
-    {
-      id: 1,
-      title: "Bác sĩ Chuyên khoa HIV",
-      description:
-        "Đội ngũ bác sĩ chuyên gia hàng đầu trong lĩnh vực điều trị và chăm sóc bệnh nhân HIV/AIDS",
-      icon: "medical-outline",
-      path: "/doctors/hiv-specialist",
-      color: ["#0D9488", "#0F766E"],
-    },
-    {
-      id: 2,
-      title: "Bác sĩ Tư vấn",
-      description:
-        "Các chuyên gia tư vấn tâm lý và sức khỏe cho người sống chung với HIV",
-      icon: "person-outline",
-      path: "/doctors/counselors",
-      color: ["#2563EB", "#1D4ED8"],
-    },
-  ];
+  useEffect(() => {
+    const fetchDoctors = async (): Promise<void> => {
+      setLoading(true);
+      try {
+        const users = await getAllUsers();
+        setDoctors(users.filter((u: User) => u.role === "doctor"));
+      } catch (err) {
+        setDoctors([]);
+        Alert.alert("Lỗi", "Không thể tải danh sách bác sĩ");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
 
-  const features: FeatureItem[] = [
-    {
-      id: 1,
-      title: "Chuyên môn cao",
-      description:
-        "Đội ngũ bác sĩ được đào tạo chuyên sâu về HIV/AIDS và có nhiều năm kinh nghiệm.",
-      icon: "school-outline",
-    },
-    {
-      id: 2,
-      title: "Tận tâm với bệnh nhân",
-      description:
-        "Luôn lắng nghe và thấu hiểu nhu cầu của bệnh nhân để đưa ra phương án điều trị tốt nhất.",
-      icon: "heart-outline",
-    },
-    {
-      id: 3,
-      title: "Cập nhật kiến thức",
-      description:
-        "Thường xuyên cập nhật các phương pháp điều trị mới nhất trong lĩnh vực HIV/AIDS.",
-      icon: "library-outline",
-    },
-  ];
-
-  const handleCategoryPress = (category: DoctorCategory) => {
-    console.log(`Navigate to ${category.title}`);
+  const toggleAccordion = (
+    doctorId: string,
+    type: keyof AccordionState
+  ): void => {
+    setOpenAccordions((prev) => ({
+      ...prev,
+      [doctorId]: {
+        personal:
+          type === "personal"
+            ? !prev[doctorId]?.personal
+            : !!prev[doctorId]?.personal,
+        cert: type === "cert" ? !prev[doctorId]?.cert : !!prev[doctorId]?.cert,
+        exp: type === "exp" ? !prev[doctorId]?.exp : !!prev[doctorId]?.exp,
+      },
+    }));
   };
 
-  const LinearGradientView: React.FC<{
-    colors: string[];
-    children: React.ReactNode;
-    style?: any;
-  }> = ({ colors, children, style }) => (
-    <View style={[{ backgroundColor: colors[0] }, style]}>{children}</View>
+  const handleOpenDocument = async (url: string): Promise<void> => {
+    if (!url) return;
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Lỗi", "Không thể mở tài liệu");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể mở tài liệu");
+    }
+  };
+
+  const renderAccordionSection = (
+    doctor: User,
+    type: keyof AccordionState,
+    title: string,
+    icon: keyof typeof Ionicons.glyphMap,
+    content: React.ReactNode
+  ): React.ReactElement => {
+    const accState = openAccordions[doctor._id] || {
+      personal: false,
+      cert: false,
+      exp: false,
+    };
+    const isOpen = accState[type];
+
+    return (
+      <View style={styles.accordionContainer}>
+        <TouchableOpacity
+          style={styles.accordionHeader}
+          onPress={() => toggleAccordion(doctor._id, type)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.accordionTitleContainer}>
+            <Ionicons name={icon} size={20} color="#0D9488" />
+            <Text style={styles.accordionTitle}>{title}</Text>
+          </View>
+          <Ionicons
+            name={isOpen ? "chevron-up" : "chevron-down"}
+            size={20}
+            color="#6B7280"
+          />
+        </TouchableOpacity>
+
+        {isOpen && <View style={styles.accordionContent}>{content}</View>}
+      </View>
+    );
+  };
+
+  const renderPersonalInfo = (doctor: User): React.ReactElement => (
+    <View style={styles.infoList}>
+      <View style={styles.infoItem}>
+        <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+        <Text style={styles.infoLabel}>Giới tính:</Text>
+        <Text style={styles.infoValue}>
+          {doctor.gender === "male"
+            ? "Nam"
+            : doctor.gender === "female"
+            ? "Nữ"
+            : doctor.gender === "other"
+            ? "Khác"
+            : "Chưa cập nhật"}
+        </Text>
+      </View>
+
+      <View style={styles.infoItem}>
+        <Ionicons name="call-outline" size={20} color="#9CA3AF" />
+        <Text style={styles.infoLabel}>SĐT:</Text>
+        <Text style={styles.infoValue}>
+          {doctor.phone_number || "Chưa cập nhật"}
+        </Text>
+      </View>
+
+      <View style={styles.infoItem}>
+        <Ionicons name="location-outline" size={20} color="#9CA3AF" />
+        <Text style={styles.infoLabel}>Địa chỉ:</Text>
+        <Text style={styles.infoValue}>
+          {doctor.address || "Chưa cập nhật"}
+        </Text>
+      </View>
+
+      <View style={styles.infoItem}>
+        <Ionicons name="calendar-outline" size={20} color="#9CA3AF" />
+        <Text style={styles.infoLabel}>Ngày sinh:</Text>
+        <Text style={styles.infoValue}>{formatDate(doctor.dateOfBirth)}</Text>
+      </View>
+    </View>
+  );
+
+  const renderCertifications = (doctor: any) => {
+    const approvedCerts = (doctor.certifications || []).filter(
+      (cert: Experience) => cert.status === "approved"
+    );
+
+    if (approvedCerts.length === 0) {
+      return (
+        <Text style={styles.emptyText}>
+          Chứng chỉ làm việc chưa được cập nhật.
+        </Text>
+      );
+    }
+
+    return (
+      <View style={styles.itemsList}>
+        {approvedCerts.map((cert: Certification, index: number) => (
+          <View
+            key={cert._id || `${cert.title}-${index}`}
+            style={styles.certItem}
+          >
+            <View style={styles.certHeader}>
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color="#0D9488"
+              />
+              <Text style={styles.certTitle}>{cert.title}</Text>
+            </View>
+
+            <View style={styles.certDetail}>
+              <Ionicons name="business-outline" size={16} color="#9CA3AF" />
+              <Text style={styles.certLabel}>Cấp bởi:</Text>
+              <Text style={styles.certValue}>
+                {cert.issuer || "Chưa xác định"}
+              </Text>
+            </View>
+
+            <View style={styles.certDetail}>
+              <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
+              <Text style={styles.certDateText}>
+                Ngày cấp: {formatDate(cert.issueDate)}
+                {cert.expiryDate &&
+                  ` | Ngày hết hạn: ${formatDate(cert.expiryDate)}`}
+              </Text>
+            </View>
+
+            {cert.description && (
+              <View style={styles.certDetail}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.certDescription}>{cert.description}</Text>
+              </View>
+            )}
+
+            {cert.fileUrl && (
+              <TouchableOpacity
+                style={styles.documentButton}
+                onPress={() => handleOpenDocument(cert.fileUrl)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="document-outline" size={16} color="#3B82F6" />
+                <Text style={styles.documentButtonText}>Xem tài liệu</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderExperiences = (doctor: any) => {
+    const approvedExps = (doctor.experiences || []).filter(
+      (exp: Experience) => exp.status === "approved"
+    );
+
+    if (approvedExps.length === 0) {
+      return (
+        <Text style={styles.emptyText}>
+          Kinh nghiệm làm việc chưa được cập nhật.
+        </Text>
+      );
+    }
+
+    return (
+      <View style={styles.itemsList}>
+        {approvedExps.map((exp: Experience, index: number) => (
+          <View
+            key={exp._id || `${exp.position}-${index}`}
+            style={styles.expItem}
+          >
+            <View style={styles.expHeader}>
+              <Ionicons name="briefcase-outline" size={20} color="#3B82F6" />
+              <Text style={styles.expTitle}>{exp.position}</Text>
+            </View>
+
+            <View style={styles.expDetail}>
+              <Ionicons name="business-outline" size={16} color="#9CA3AF" />
+              <Text style={styles.expLabel}>Bệnh viện:</Text>
+              <Text style={styles.expValue}>
+                {exp.hospital || "Chưa xác định"}
+              </Text>
+            </View>
+
+            <View style={styles.expDetail}>
+              <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
+              <Text style={styles.expDateText}>
+                Thời gian: {formatDate(exp.startDate)} -{" "}
+                {exp.endDate ? formatDate(exp.endDate) : "Hiện tại"}
+              </Text>
+            </View>
+
+            {exp.description && (
+              <View style={styles.expDetail}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.expDescription}>{exp.description}</Text>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderDoctorCard = (doctor: User): React.ReactElement => (
+    <View key={doctor._id} style={styles.doctorCard}>
+      {/* Avatar */}
+      <View style={styles.avatarContainer}>
+        {doctor.avatar ? (
+          <Image source={{ uri: doctor.avatar }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Ionicons name="person" size={32} color="#0D9488" />
+          </View>
+        )}
+      </View>
+
+      {/* Name & Email */}
+      <Text style={styles.doctorName}>{doctor.userName}</Text>
+      <Text style={styles.doctorEmail}>{doctor.email || "Chưa cập nhật"}</Text>
+
+      {/* Accordions */}
+      <View style={styles.accordionsContainer}>
+        {renderAccordionSection(
+          doctor,
+          "personal",
+          "Thông tin cá nhân",
+          "person-outline",
+          renderPersonalInfo(doctor)
+        )}
+
+        {renderAccordionSection(
+          doctor,
+          "cert",
+          "Chứng chỉ làm việc",
+          "document-text-outline",
+          renderCertifications(doctor)
+        )}
+
+        {renderAccordionSection(
+          doctor,
+          "exp",
+          "Kinh nghiệm làm việc",
+          "briefcase-outline",
+          renderExperiences(doctor)
+        )}
+      </View>
+    </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Back Button */}
-      <View style={styles.backButtonContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("MainTabs")}
-          style={styles.backButton}
-          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-        >
-          <Ionicons name="arrow-back" size={28} color="#0D9488" />
-        </TouchableOpacity>
+      {/* Hero Section */}
+      <View style={styles.heroSection}>
+        <Text style={styles.heroTitle}>Đội ngũ Y Bác sĩ</Text>
+        <Text style={styles.heroSubtitle}>
+          Đội ngũ y bác sĩ của chúng tôi là những chuyên gia hàng đầu trong lĩnh
+          vực chăm sóc sức khỏe cho người sống chung với HIV. Với kinh nghiệm và
+          chuyên môn sâu rộng, chúng tôi cam kết mang đến dịch vụ y tế chất
+          lượng cao nhất.
+        </Text>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Đội ngũ Y Bác sĩ</Text>
-            <Text style={styles.heroSubtitle}>
-              Đội ngũ y bác sĩ của chúng tôi là những chuyên gia hàng đầu trong
-              lĩnh vực chăm sóc sức khỏe cho người sống chung với HIV. Với kinh
-              nghiệm và chuyên môn sâu rộng, chúng tôi cam kết mang đến dịch vụ
-              y tế chất lượng cao nhất.
+
+      {/* Doctors List */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0D9488" />
+            <Text style={styles.loadingText}>Đang tải danh sách bác sĩ...</Text>
+          </View>
+        ) : doctors.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="people-outline" size={64} color="#9CA3AF" />
+            <Text style={styles.emptyTitle}>Chưa có bác sĩ nào</Text>
+            <Text style={styles.emptyDescription}>
+              Danh sách bác sĩ sẽ được cập nhật sớm nhất.
             </Text>
           </View>
-        </View>
-
-        {/* Categories Grid */}
-        <View style={styles.categoriesSection}>
-          <View style={styles.categoriesGrid}>
-            {doctorCategories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={styles.categoryCard}
-                onPress={() => handleCategoryPress(category)}
-                activeOpacity={0.8}
-              >
-                <LinearGradientView
-                  colors={category.color}
-                  style={styles.categoryHeader}
-                >
-                  <View style={styles.categoryIconContainer}>
-                    <View style={styles.categoryIcon}>
-                      <Ionicons
-                        name={category.icon as any}
-                        size={32}
-                        color="#ffffff"
-                      />
-                    </View>
-                  </View>
-                </LinearGradientView>
-
-                <View style={styles.categoryContent}>
-                  <Text style={styles.categoryTitle}>{category.title}</Text>
-                  <Text style={styles.categoryDescription}>
-                    {category.description}
-                  </Text>
-
-                  <View style={styles.categoryFooter}>
-                    <Text style={styles.viewMoreText}>Xem chi tiết</Text>
-                    <Ionicons
-                      name="arrow-forward-outline"
-                      size={16}
-                      color="#0D9488"
-                    />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+        ) : (
+          <View style={styles.doctorsContainer}>
+            {doctors.map(renderDoctorCard)}
           </View>
-        </View>
-
-        {/* Additional Information */}
-        <View style={styles.additionalSection}>
-          <View style={styles.additionalCard}>
-            <Text style={styles.additionalTitle}>
-              Tại sao chọn đội ngũ y bác sĩ của chúng tôi?
-            </Text>
-
-            <View style={styles.featuresGrid}>
-              {features.map((feature) => (
-                <View key={feature.id} style={styles.featureItem}>
-                  <View style={styles.featureIconContainer}>
-                    <Ionicons
-                      name={feature.icon as any}
-                      size={24}
-                      color="#0D9488"
-                    />
-                  </View>
-                  <View style={styles.featureContent}>
-                    <Text style={styles.featureTitle}>{feature.title}</Text>
-                    <Text style={styles.featureDescription}>
-                      {feature.description}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Call to Action */}
-        <View style={styles.ctaSection}>
-          <View style={styles.ctaCard}>
-            <View style={styles.ctaIconContainer}>
-              <Ionicons name="calendar-outline" size={40} color="#0D9488" />
-            </View>
-            <Text style={styles.ctaTitle}>Sẵn sàng đặt lịch khám?</Text>
-            <Text style={styles.ctaDescription}>
-              Hãy liên hệ với chúng tôi để được tư vấn và đặt lịch khám với các
-              bác sĩ chuyên khoa
-            </Text>
-            <TouchableOpacity
-              style={styles.ctaButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.ctaButtonText}>Đặt lịch ngay</Text>
-              <Ionicons
-                name="arrow-forward-outline"
-                size={20}
-                color="#ffffff"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Bottom spacing */}
-        <View style={{ height: 40 }} />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -235,217 +387,273 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
-  backButtonContainer: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    zIndex: 10,
-  },
-  backButton: {
-    backgroundColor: "#fff",
-    borderRadius: 26,
-    padding: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-  },
   heroSection: {
-    backgroundColor: "#0F766E",
-    paddingVertical: 40,
+    backgroundColor: "#0D9488",
     paddingHorizontal: 20,
-  },
-  heroContent: {
-    alignItems: "center",
+    paddingVertical: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#FFFFFF",
     textAlign: "center",
     marginBottom: 16,
   },
   heroSubtitle: {
-    fontSize: 18,
-    color: "#A7F3D0",
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
     textAlign: "center",
-    lineHeight: 28,
-    paddingHorizontal: 10,
+    lineHeight: 24,
+    maxWidth: "100%",
   },
-  categoriesSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+  scrollView: {
+    flex: 1,
   },
-  categoriesGrid: {
+  scrollContent: {
+    padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#374151",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+  },
+  doctorsContainer: {
     gap: 20,
   },
-  categoryCard: {
-    backgroundColor: "#ffffff",
+  doctorCard: {
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: "hidden",
-    transform: [{ scale: 1 }],
-  },
-  categoryHeader: {
-    paddingVertical: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryIconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryContent: {
     padding: 24,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
-  categoryTitle: {
+  avatarContainer: {
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#F0FDFA",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  doctorName: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1F2937",
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 4,
   },
-  categoryDescription: {
-    fontSize: 16,
+  doctorEmail: {
+    fontSize: 14,
     color: "#6B7280",
     textAlign: "center",
-    lineHeight: 24,
     marginBottom: 20,
   },
-  categoryFooter: {
+  accordionsContainer: {
+    width: "100%",
+    gap: 8,
+  },
+  accordionContainer: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  accordionTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  viewMoreText: {
+  accordionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#0D9488",
   },
-  additionalSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  accordionContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderTopWidth: 0,
   },
-  additionalCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  // Personal Info Styles
+  infoList: {
+    gap: 12,
   },
-  additionalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  featuresGrid: {
-    gap: 20,
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  featureIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: "#F0FDFA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-    flexShrink: 0,
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 8,
-  },
-  featureDescription: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 24,
-  },
-  ctaSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  ctaCard: {
-    backgroundColor: "#F0FDFA",
-    borderRadius: 16,
-    padding: 32,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#A7F3D0",
-  },
-  ctaIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  ctaTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  ctaDescription: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  ctaButton: {
-    backgroundColor: "#0D9488",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+  infoItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  ctaButtonText: {
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+    minWidth: 80,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: "#6B7280",
+    flex: 1,
+  },
+  // Certifications Styles
+  itemsList: {
+    gap: 12,
+  },
+  certItem: {
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: 8,
+  },
+  certHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  certTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#ffffff",
+    color: "#1F2937",
+    flex: 1,
+  },
+  certDetail: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  certLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  certValue: {
+    fontSize: 14,
+    color: "#6B7280",
+    flex: 1,
+  },
+  certDateText: {
+    fontSize: 12,
+    color: "#6B7280",
+    flex: 1,
+  },
+  certDescription: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    flex: 1,
+  },
+  documentButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+  },
+  documentButtonText: {
+    fontSize: 12,
+    color: "#3B82F6",
+    textDecorationLine: "underline",
+  },
+  // Experience Styles
+  expItem: {
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: 8,
+  },
+  expHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  expTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+    flex: 1,
+  },
+  expDetail: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  expLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  expValue: {
+    fontSize: 14,
+    color: "#6B7280",
+    flex: 1,
+  },
+  expDateText: {
+    fontSize: 12,
+    color: "#6B7280",
+    flex: 1,
+  },
+  expDescription: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    flex: 1,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    fontStyle: "italic",
+    textAlign: "center",
   },
 });
 

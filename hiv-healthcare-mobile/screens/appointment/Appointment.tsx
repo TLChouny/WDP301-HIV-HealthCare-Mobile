@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  Alert,
-  Modal,
-  FlatList,
-  RefreshControl,
-  Linking,
-  Dimensions,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../contexts/AuthContext";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 import { deleteBooking, getBookingsByUserId } from "../../api/bookingApi";
+import { createPaymentLink } from "../../api/paymentApi";
+import { useAuth } from "../../contexts/AuthContext";
 import { Booking } from "../../types/Booking";
 
 const { width } = Dimensions.get("window");
@@ -37,6 +37,10 @@ const Appointment: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentBooking, setSelectedPaymentBooking] =
     useState<Booking | null>(null);
+
+  // WebView payment states
+  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
 
   const fetchBookingsByUserId = async (userId: string) => {
     const res = await getBookingsByUserId(userId);
@@ -97,7 +101,55 @@ const Appointment: React.FC = () => {
     setShowPaymentModal(true);
   };
 
-  const handleConfirmPayment = async () => {};
+  const handleConfirmPayment = async () => {
+    if (!selectedPaymentBooking || !selectedPaymentBooking.serviceId) return;
+
+    try {
+      const payment = await createPaymentLink({
+        paymentID: `PAY-${Date.now()}`,
+        orderCode: Number(selectedPaymentBooking.bookingCode || Date.now()),
+        orderName: selectedPaymentBooking.serviceId.serviceName,
+        amount: Number(selectedPaymentBooking.serviceId.price),
+        description: `Thanh toán cho lịch hẹn #${selectedPaymentBooking.bookingCode}`,
+        status: "pending",
+        returnUrl: `http://localhost:5173/payment-success`,
+        cancelUrl: `http://localhost:5173/payment-cancel`,
+        bookingIds: [selectedPaymentBooking._id!],
+      });
+
+      if (payment.checkoutUrl && user) {
+        setPaymentUrl(payment.checkoutUrl);
+        setShowPaymentModal(false);
+        setShowPaymentWebView(true);
+      } else {
+        Alert.alert("Lỗi", "Không thể tạo liên kết thanh toán");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo thanh toán:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi tạo thanh toán");
+    }
+  };
+
+  const handlePaymentWebViewNavigation = (navState: any) => {
+    const { url } = navState;
+
+    if (url.includes("payment-success")) {
+      setShowPaymentWebView(false);
+      Alert.alert("Thành công", "Thanh toán đã được xử lý thành công!", [
+        {
+          text: "OK",
+          onPress: () => {
+            if (user?._id) {
+              fetchBookingsByUserId(user._id);
+            }
+          },
+        },
+      ]);
+    } else if (url.includes("payment-cancel")) {
+      setShowPaymentWebView(false);
+      Alert.alert("Hủy bỏ", "Bạn đã hủy thanh toán.");
+    }
+  };
 
   const translateBookingStatus = (status: string): string => {
     switch (status) {
@@ -109,8 +161,6 @@ const Appointment: React.FC = () => {
         return "Đã điểm danh";
       case "completed":
         return "Hoàn thành";
-      case "re-examination":
-        return "Tái khám";
       case "cancelled":
         return "Đã hủy";
       case "paid":
@@ -132,8 +182,6 @@ const Appointment: React.FC = () => {
         return { bg: "#E0E7FF", text: "#3730A3", border: "#C7D2FE" };
       case "checked-in":
         return { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" };
-      case "re-examination":
-        return { bg: "#EDE9FE", text: "#7C3AED", border: "#DDD6FE" };
       case "paid":
         return { bg: "#FED7AA", text: "#C2410C", border: "#FDBA74" };
       default:
@@ -149,8 +197,6 @@ const Appointment: React.FC = () => {
       case "completed":
       case "checked-in":
         return "checkmark-circle-outline";
-      case "re-examination":
-        return "refresh-outline";
       case "cancelled":
         return "close-circle-outline";
       case "paid":
@@ -273,14 +319,6 @@ const Appointment: React.FC = () => {
               {item.status === "pending" && (
                 <>
                   <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => handleCancelAppointment(item)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="close-outline" size={16} color="#EF4444" />
-                    <Text style={styles.cancelButtonText}>Hủy</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
                     style={styles.payButton}
                     onPress={() => handleOpenPayment(item)}
                     activeOpacity={0.8}
@@ -296,6 +334,7 @@ const Appointment: React.FC = () => {
       </View>
     );
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -430,7 +469,7 @@ const Appointment: React.FC = () => {
                 <View style={styles.viewModalIcon}>
                   <Ionicons name="calendar-outline" size={32} color="#FFFFFF" />
                 </View>
-                <Text style={styles.viewModalTitle}>Chi tiết lịch hẹnn</Text>
+                <Text style={styles.viewModalTitle}>Chi tiết lịch hẹn</Text>
               </View>
 
               <ScrollView style={styles.viewModalContent}>
@@ -460,19 +499,9 @@ const Appointment: React.FC = () => {
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Meeting Link:</Text>
-                    {selectedAppointment.meetLink ? (
-                      <Text
-                        style={styles.linkValue}
-                        onPress={() =>
-                          selectedAppointment.meetLink &&
-                          Linking.openURL(selectedAppointment.meetLink)
-                        }
-                      >
-                        Tham gia ngay
-                      </Text>
-                    ) : (
-                      <Text style={styles.detailValue}>Không có</Text>
-                    )}
+                    <Text style={styles.detailValue}>
+                      {selectedAppointment.meetLink || "Không có"}
+                    </Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Trạng thái:</Text>
@@ -580,11 +609,13 @@ const Appointment: React.FC = () => {
                     </View>
                   )}
                 </View>
+
                 <Text style={styles.paymentServiceName}>
                   {selectedPaymentBooking.serviceId?.serviceName ||
                     "Không xác định"}
                 </Text>
-                <Text style={styles.paymentAmount}>
+
+                <Text style={styles.paymentPrice}>
                   {formatPrice(selectedPaymentBooking.serviceId?.price || 0)}
                 </Text>
 
@@ -610,13 +641,13 @@ const Appointment: React.FC = () => {
                 </View>
               </View>
 
-              <View style={styles.paymentActions}>
+              <View style={styles.paymentModalActions}>
                 <TouchableOpacity
-                  style={styles.paymentCloseButton}
+                  style={styles.cancelPaymentButton}
                   onPress={() => setShowPaymentModal(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.paymentCloseButtonText}>Đóng</Text>
+                  <Text style={styles.cancelPaymentButtonText}>Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.confirmPaymentButton}
@@ -632,6 +663,38 @@ const Appointment: React.FC = () => {
           </View>
         </Modal>
       )}
+
+      {/* Payment WebView Modal */}
+      <Modal
+        visible={showPaymentWebView}
+        animationType="slide"
+        onRequestClose={() => setShowPaymentWebView(false)}
+      >
+        <SafeAreaView style={styles.webViewContainer}>
+          <View style={styles.webViewHeader}>
+            <TouchableOpacity
+              onPress={() => setShowPaymentWebView(false)}
+              style={styles.webViewCloseButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color="#EF4444" />
+              <Text style={styles.webViewCloseText}>Đóng</Text>
+            </TouchableOpacity>
+            <Text style={styles.webViewTitle}>Thanh toán</Text>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <WebView
+            source={{ uri: paymentUrl }}
+            onNavigationStateChange={handlePaymentWebViewNavigation}
+            startInLoadingState={true}
+            style={styles.webView}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            scalesPageToFit={true}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -639,64 +702,89 @@ const Appointment: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F8FAFC",
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#0D9488",
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
   },
   headerIcon: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 12,
-    backgroundColor: "#0D9488",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#374151",
-    marginBottom: 2,
+    color: "#FFFFFF",
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "rgba(255, 255, 255, 0.8)",
   },
   filterContainer: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   statusFilterButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F0FDFA",
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#0D9488",
+    borderColor: "#E5E7EB",
   },
   statusFilterText: {
     fontSize: 16,
-    color: "#0D9488",
+    color: "#374151",
     fontWeight: "500",
   },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 24,
+  },
   appointmentsList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 20,
   },
   appointmentCard: {
@@ -706,10 +794,8 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   cardContent: {
     padding: 16,
@@ -722,8 +808,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   serviceImage: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: 12,
   },
   placeholderImage: {
@@ -737,9 +823,8 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#1F2937",
     marginBottom: 8,
-    lineHeight: 24,
   },
   appointmentMeta: {
     gap: 6,
@@ -747,14 +832,16 @@ const styles = StyleSheet.create({
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
   },
   metaText: {
     fontSize: 14,
     color: "#6B7280",
+    marginLeft: 6,
   },
   statusSection: {
-    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   statusBadge: {
     flexDirection: "row",
@@ -763,12 +850,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    marginBottom: 12,
-    gap: 4,
   },
   statusText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
+    marginLeft: 4,
   },
   actionButtons: {
     flexDirection: "row",
@@ -781,26 +867,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    gap: 4,
   },
   viewButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "600",
     color: "#3B82F6",
+    marginLeft: 4,
   },
   cancelButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#FEF2F2",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    gap: 4,
   },
   cancelButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "600",
     color: "#EF4444",
+    marginLeft: 4,
   },
   payButton: {
     flexDirection: "row",
@@ -809,77 +895,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    gap: 4,
   },
   payButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#FFFFFF",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-  },
-  emptyIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#F3F4F6",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
+    fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  emptyDescription: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  bookNowButton: {
-    backgroundColor: "#0D9488",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  bookNowButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    marginLeft: 4,
   },
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   statusPickerModal: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    width: width * 0.8,
+    width: "100%",
     maxHeight: "70%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#374151",
+    fontWeight: "bold",
+    color: "#1F2937",
   },
   statusOption: {
     flexDirection: "row",
@@ -891,7 +938,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   statusOptionSelected: {
-    backgroundColor: "#F0FDFA",
+    backgroundColor: "#F0FDF4",
   },
   statusOptionText: {
     fontSize: 16,
@@ -904,20 +951,20 @@ const styles = StyleSheet.create({
   viewModal: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    width: width * 0.9,
-    maxHeight: "80%",
+    width: "100%",
+    maxHeight: "85%",
   },
   viewModalHeader: {
     alignItems: "center",
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   viewModalIcon: {
     width: 64,
     height: 64,
-    borderRadius: 16,
     backgroundColor: "#0D9488",
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -925,74 +972,61 @@ const styles = StyleSheet.create({
   viewModalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#1F2937",
   },
   viewModalContent: {
-    paddingHorizontal: 24,
+    padding: 24,
     maxHeight: 400,
   },
   appointmentServiceName: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#1F2937",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   appointmentDetails: {
-    gap: 12,
+    gap: 16,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    alignItems: "flex-start",
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: "600",
     color: "#6B7280",
+    flex: 1,
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
+    fontSize: 16,
+    color: "#1F2937",
+    flex: 2,
     textAlign: "right",
-    maxWidth: "60%",
-  },
-  linkValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#0D9488",
-    textDecorationLine: "underline",
-    textAlign: "right",
-    flexShrink: 1,
-    maxWidth: "60%",
   },
   detailStatusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   detailStatusText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
+    marginLeft: 4,
   },
   viewModalActions: {
     flexDirection: "row",
+    padding: 24,
     gap: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
   },
   closeButton: {
     flex: 1,
+    backgroundColor: "#F3F4F6",
     paddingVertical: 12,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
     alignItems: "center",
   },
   closeButtonText: {
@@ -1002,9 +1036,9 @@ const styles = StyleSheet.create({
   },
   cancelAppointmentButton: {
     flex: 1,
+    backgroundColor: "#EF4444",
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#EF4444",
     alignItems: "center",
   },
   cancelAppointmentButtonText: {
@@ -1015,20 +1049,20 @@ const styles = StyleSheet.create({
   paymentModal: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    width: width * 0.9,
-    maxHeight: "70%",
+    width: "100%",
+    maxWidth: 400,
   },
   paymentModalHeader: {
     alignItems: "center",
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   paymentModalIcon: {
     width: 64,
     height: 64,
-    borderRadius: 16,
     backgroundColor: "#0D9488",
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -1036,12 +1070,11 @@ const styles = StyleSheet.create({
   paymentModalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#1F2937",
   },
   paymentContent: {
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+    padding: 24,
   },
   paymentServiceImageContainer: {
     marginBottom: 16,
@@ -1054,24 +1087,23 @@ const styles = StyleSheet.create({
   paymentServiceName: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#1F2937",
     textAlign: "center",
     marginBottom: 8,
   },
-  paymentAmount: {
+  paymentPrice: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#EF4444",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   paymentDetails: {
     width: "100%",
-    gap: 8,
+    gap: 12,
   },
   paymentDetailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
   },
   paymentDetailLabel: {
     fontSize: 14,
@@ -1080,38 +1112,73 @@ const styles = StyleSheet.create({
   paymentDetailValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: "#1F2937",
   },
-  paymentActions: {
+  paymentModalActions: {
     flexDirection: "row",
+    padding: 24,
     gap: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
   },
-  paymentCloseButton: {
+  cancelPaymentButton: {
     flex: 1,
+    backgroundColor: "#F3F4F6",
     paddingVertical: 12,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
     alignItems: "center",
   },
-  paymentCloseButtonText: {
+  cancelPaymentButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#374151",
   },
   confirmPaymentButton: {
     flex: 1,
+    backgroundColor: "#0D9488",
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#0D9488",
     alignItems: "center",
   },
   confirmPaymentButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  // WebView styles
+  webViewContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  webViewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+  },
+  webViewCloseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
+  },
+  webViewCloseText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#EF4444",
+    marginLeft: 8,
+  },
+  webViewTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  webView: {
+    flex: 1,
   },
 });
 
