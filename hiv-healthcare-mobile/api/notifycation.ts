@@ -14,10 +14,6 @@ export const getNotificationsByUserId = async (
     const response = await fetch(
       `${BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_BY_USER_ID(userId)}`
     );
-
-    if (!response.ok)
-      throw new Error("Failed to fetch notifications by user ID");
-
     const data = await response.json();
     return { data };
   } catch (error) {
