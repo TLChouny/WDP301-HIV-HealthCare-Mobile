@@ -163,7 +163,7 @@ const Appointment: React.FC = () => {
         return "Hoàn thành";
       case "cancelled":
         return "Đã hủy";
-      case "paid":
+      case "checked-out":
         return "Đã thanh toán";
       default:
         return "Không xác định";
@@ -182,7 +182,7 @@ const Appointment: React.FC = () => {
         return { bg: "#E0E7FF", text: "#3730A3", border: "#C7D2FE" };
       case "checked-in":
         return { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" };
-      case "paid":
+      case "checked-out":
         return { bg: "#FED7AA", text: "#C2410C", border: "#FDBA74" };
       default:
         return { bg: "#F3F4F6", text: "#374151", border: "#E5E7EB" };
@@ -199,7 +199,7 @@ const Appointment: React.FC = () => {
         return "checkmark-circle-outline";
       case "cancelled":
         return "close-circle-outline";
-      case "paid":
+      case "checked-out":
         return "card-outline";
       default:
         return "help-circle-outline";
@@ -224,7 +224,7 @@ const Appointment: React.FC = () => {
     { value: "pending", label: "Chờ xác nhận" },
     { value: "confirmed", label: "Đã xác nhận" },
     { value: "checked-in", label: "Đã điểm danh" },
-    { value: "paid", label: "Đã thanh toán" },
+    { value: "checked-out", label: "Đã thanh toán" },
     { value: "cancelled", label: "Đã hủy" },
     { value: "completed", label: "Hoàn thành" },
   ];

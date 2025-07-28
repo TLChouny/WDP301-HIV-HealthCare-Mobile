@@ -1,26 +1,27 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import type { ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "../types/User";
 
 import {
+  forgotPassword as apiForgotPassword,
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
-  verifyOTP as apiVerifyOTP,
   resendOTP as apiResendOTP,
-  forgotPassword as apiForgotPassword,
-  verifyResetOTP as apiVerifyResetOTP,
   resetPassword as apiResetPassword,
+  verifyOTP as apiVerifyOTP,
+  verifyResetOTP as apiVerifyResetOTP,
 } from "../api/authApi";
 
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
+  deleteUser as apiDeleteUser,
   getAllUsers as apiGetAllUsers,
   getUserById as apiGetUserById,
   updateUser as apiUpdateUser,
-  deleteUser as apiDeleteUser,
 } from "../api/userApi";
+import { MainTabParamList, RootStackParamList } from "../components/Navigation";
 import {
   getToken,
   getUser,
@@ -41,15 +42,16 @@ interface JwtPayload {
   updatedAt?: string;
   exp?: number;
 }
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (
     data: { email: string; password: string },
-    navigation?: any
+    navigation: NavigationProp
   ) => Promise<void>;
-  logout: (navigation?: any) => Promise<void>;
+  logout: (navigation?: NavigationProp) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isDoctor: boolean;
@@ -95,7 +97,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!token || typeof token !== "string") {
         throw new Error("Token không hợp lệ hoặc trống");
       }
-
       const decoded: JwtPayload = jwtDecode(token);
       console.log("Decoded token:", decoded);
 
@@ -103,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (decoded.exp && decoded.exp < currentTime) {
         throw new Error("Token đã hết hạn");
       }
-
       const userData = decoded.user || {
         _id: decoded.id || decoded._id || "unknown",
         userName: decoded.userName || "Unknown User",
@@ -165,21 +165,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const navigateBasedOnRole = (userData: User, navigation?: any) => {
+  const navigateBasedOnRole = (userData: User, navigation?: NavigationProp) => {
     if (!navigation) return;
-
     switch (userData.role) {
-      case "admin":
-        navigation.navigate("AdminDashboard");
-        break;
-      case "doctor":
-        navigation.navigate("DoctorDashboard");
-        break;
-      case "staff":
-        navigation.navigate("StaffDashboard");
-        break;
       default:
-        navigation.navigate("MainTabs");
+        navigation.navigate("MainTabs", { screen: "Home" });
         break;
     }
   };
@@ -194,10 +184,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (
     data: { email: string; password: string },
-    navigation?: any
+    navigation: NavigationProp
   ) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await apiLogin(data);
 
       const token = await getToken();
@@ -207,16 +197,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
 
       if (navigation) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainTabs" }],
-        });
+        navigateBasedOnRole(userData, navigation);
       }
-
-      console.log("Đăng nhập thành công, đã chuyển đến MainTabs");
-    } catch (error: any) {
-      console.error("Lỗi đăng nhập:", error.message);
-      throw error;
+    } catch (error) {
     } finally {
       setLoading(false);
     }
@@ -350,7 +333,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return response;
     } catch (error: any) {
       console.error("Lỗi cập nhật người dùng:", error.message);
-      throw error;
     }
   };
 
@@ -365,7 +347,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error: any) {
       console.error("Lỗi xóa người dùng:", error.message);
-      throw error;
     }
   };
 

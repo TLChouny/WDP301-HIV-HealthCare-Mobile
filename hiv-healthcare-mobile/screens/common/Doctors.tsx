@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { getAllUsers } from "../../api/userApi";
 import { User, Certification, Experience } from "../../types/User";
+import { useNavigation } from "@react-navigation/native";
 
 interface AccordionState {
   personal: boolean;
@@ -35,6 +36,7 @@ const formatDate = (dateString?: string): string => {
 };
 
 const Doctors: React.FC = () => {
+  const navigation = useNavigation();
   const [doctors, setDoctors] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [openAccordions, setOpenAccordions] = useState<OpenAccordions>({});
@@ -166,7 +168,7 @@ const Doctors: React.FC = () => {
 
   const renderCertifications = (doctor: any) => {
     const approvedCerts = (doctor.certifications || []).filter(
-      (cert: Experience) => cert.status === "approved"
+      (cert: Certification) => cert.status === "approved"
     );
 
     if (approvedCerts.length === 0) {

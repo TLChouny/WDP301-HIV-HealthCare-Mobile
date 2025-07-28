@@ -13,29 +13,21 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/Header";
+import { User } from "../../types/User";
+import { getAllUsers } from "../../api/userApi";
+import { RootStackParamList } from "../../components/Navigation";
+import { useAuth } from "../../contexts/AuthContext";
 
-// Update image imports to use correct paths
 const images = {
   doctor: require("../../assets/doingubacsi.png"),
   doctor2: require("../../assets/doingubacsi2.png"),
 };
-type RootStackParamList = {
-  Home: undefined;
-  Login: undefined;
-  Register: undefined;
-  AppointmentBooking: undefined;
-  OnlineConsultation: undefined;
-  MainTabs: undefined;
-};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// Screen dimensions
 const { width } = Dimensions.get("window");
 
-// Meeting Modal Component
 const MeetingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
@@ -44,14 +36,13 @@ const MeetingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   const handleAppointmentBooking = () => {
     onClose();
-    navigation.navigate("AppointmentBooking");
+    navigation.navigate("AppointmentBooking", { serviceId: "1" });
   };
 
   const handleOnlineConsultation = () => {
     onClose();
     navigation.navigate("OnlineConsultation");
   };
-
   return (
     <Modal
       visible={isOpen}
@@ -95,11 +86,21 @@ const Home: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
-
+  const [doctors, setDoctors] = useState<User[]>([]);
   // Use auth context to determine if user is authenticated
   const { isAuthenticated } = useAuth();
   const showAuthButtons = !isAuthenticated;
-
+  useEffect(() => {
+    const fetchDoctors = async (): Promise<void> => {
+      try {
+        const users = await getAllUsers();
+        setDoctors(users.filter((u: User) => u.role === "doctor"));
+      } catch (err) {
+        setDoctors([]);
+      }
+    };
+    fetchDoctors();
+  }, []);
   const handleScroll = (event: any) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const totalHeight = contentSize.height - layoutMeasurement.height;
@@ -158,7 +159,6 @@ const Home: React.FC = () => {
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
       >
-        {/* Hero Section */}
         <View
           style={[
             styles.heroSection,
@@ -436,15 +436,7 @@ const Home: React.FC = () => {
         <View style={[styles.section, styles.doctorsSection]}>
           <Text style={styles.sectionTitle}>Đội Ngũ Chuyên Gia</Text>
           <View style={styles.doctorsGrid}>
-            {[
-              { name: "BS. Nguyễn Văn A", role: "Chuyên Gia Điều Trị HIV" },
-              {
-                name: "BS. Trần Thị B",
-                role: "Chuyên Gia Tư Vấn Xét Nghiệm",
-              },
-              { name: "ThS. Lê Văn C", role: "Chuyên Viên Tâm Lý" },
-              { name: "BS. Phạm Thị D", role: "Chuyên Gia Dinh Dưỡng" },
-            ].map((doctor, index) => (
+            {doctors.map((doctor, index) => (
               <View key={index} style={styles.doctorCard}>
                 <View style={styles.doctorImageContainer}>
                   <View style={styles.doctorImagePlaceholder}>
@@ -452,9 +444,12 @@ const Home: React.FC = () => {
                   </View>
                 </View>
                 <View style={styles.doctorInfo}>
-                  <Text style={styles.doctorName}>{doctor.name}</Text>
+                  <Text style={styles.doctorName}>{doctor.userName}</Text>
                   <Text style={styles.doctorRole}>{doctor.role}</Text>
-                  <TouchableOpacity style={styles.doctorViewButton}>
+                  <TouchableOpacity
+                    style={styles.doctorViewButton}
+                    onPress={() => navigation.push("Doctors")}
+                  >
                     <Text style={styles.doctorViewButtonText}>Xem hồ sơ</Text>
                     <Ionicons
                       name="arrow-forward-outline"
@@ -526,16 +521,13 @@ const Home: React.FC = () => {
           </View>
         </View>
 
-        {/* Add some bottom padding */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Floating Action Button */}
       <TouchableOpacity style={styles.fab} onPress={scrollToTop}>
         <Ionicons name="arrow-up-outline" size={24} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Meeting Modal */}
       <MeetingModal
         isOpen={showMeetingModal}
         onClose={() => setShowMeetingModal(false)}
