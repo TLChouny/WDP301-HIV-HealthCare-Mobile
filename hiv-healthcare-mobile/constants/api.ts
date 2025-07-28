@@ -1,4 +1,4 @@
-export const BASE_URL = "http://172.20.10.2:5000/api";
+export const BASE_URL = "https://wdp301-hiv-healthcare-be.onrender.com/api";
 
 export const API_ENDPOINTS = {
   // ===== USER =====
@@ -35,4 +35,8 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_BY_USER_ID: (userId: string) => `/notifications/user/${userId}`,
   //
   RESULTS_BY_USER_ID: (userId: string) => `/results/user/${userId}`,
+  CREATE_PAYMENT_LINK: "/create-payment-link",
+  GET_PAYMENT_BY_ORDER_CODE: (orderId: string | number) => `/order/${orderId}`,
+  UPDATE_PAYMENT_STATUS: (orderCode: string | number) => `/order/${orderCode}`,
+  GET_ALL_PAYMENTS: "/all",
 };
