@@ -358,7 +358,7 @@ const BlogPage: React.FC = () => {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.navigate("Home")}
+            onPress={() => navigation.navigate("MainTabs", { screen: "Home" })}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={28} color="#fff" />

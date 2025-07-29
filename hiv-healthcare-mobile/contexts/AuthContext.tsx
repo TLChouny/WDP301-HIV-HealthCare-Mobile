@@ -169,7 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!navigation) return;
     switch (userData.role) {
       default:
-        navigation.navigate("Home");
+        navigation.navigate("MainTabs", { screen: "Home" });
         break;
     }
   };
