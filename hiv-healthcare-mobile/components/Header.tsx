@@ -45,7 +45,7 @@ const Header: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [notifications, setNotification] = useState<Notification[]>([]);
 
-  // Fetch data
+  // Fetch categories once
   useEffect(() => {
     const fetchCategory = async () => {
       try {
@@ -57,21 +57,27 @@ const Header: React.FC = () => {
         console.error("Error fetching categories:", error);
       }
     };
-
-    const fetchNoty = async () => {
-      try {
-        if (user && user._id) {
-          const res = await getNotificationsByUserId(user._id);
-          if (res && res.data) setNotification(res.data);
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    };
-
     fetchCategory();
-    fetchNoty();
-  }, [user?._id]);
+  }, []);
+
+  // Refetch notifications every time tab containing Header is focused
+  // (Cập nhật số badge khi chuyển tab)
+  const { useFocusEffect } = require('@react-navigation/native');
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchNoty = async () => {
+        try {
+          if (user && user._id) {
+            const res = await getNotificationsByUserId(user._id);
+            if (res && res.data) setNotification(res.data);
+          }
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+        }
+      };
+      fetchNoty();
+    }, [user?._id])
+  );
 
   // Animation effect
   useEffect(() => {

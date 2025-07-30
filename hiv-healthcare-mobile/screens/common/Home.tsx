@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -84,31 +85,32 @@ const MeetingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 const Home: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const scrollViewRef = useRef<ScrollView>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [doctors, setDoctors] = useState<User[]>([]);
   // Use auth context to determine if user is authenticated
   const { isAuthenticated } = useAuth();
   const showAuthButtons = !isAuthenticated;
-  useEffect(() => {
-    const fetchDoctors = async (): Promise<void> => {
-      try {
-        const users = await getAllUsers();
-        setDoctors(users.filter((u: User) => u.role === "doctor"));
-      } catch (err) {
-        setDoctors([]);
-      }
-    };
-    fetchDoctors();
-  }, []);
-  const handleScroll = (event: any) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const totalHeight = contentSize.height - layoutMeasurement.height;
-    if (totalHeight > 0) {
-      const progress = (contentOffset.y / totalHeight) * 100;
-      setScrollProgress(Math.min(progress, 100));
-    }
-  };
+  // Fetch doctors when Home is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      const fetchDoctors = async (): Promise<void> => {
+        try {
+          const users = await getAllUsers();
+          if (isActive) {
+            setDoctors(users.filter((u: User) => u.role === "doctor"));
+          }
+        } catch (err) {
+          if (isActive) setDoctors([]);
+        }
+      };
+      fetchDoctors();
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+  // Removed scroll progress logic
 
   const scrollToTop = () => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -147,15 +149,8 @@ const Home: React.FC = () => {
         </View>
       )}
 
-      {/* Scroll Progress Indicator */}
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${scrollProgress}%` }]} />
-      </View>
-
       <ScrollView
         ref={scrollViewRef}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
       >
@@ -582,19 +577,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#FFFFFF",
   },
-  progressBarContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: 4,
-    backgroundColor: "#E5E7EB",
-    zIndex: 50,
-  },
-  progressBar: {
-    height: "100%",
-    backgroundColor: "#0D9488",
-  },
+  // Removed progress bar styles
   heroSection: {
     backgroundColor: "#0F766E",
     paddingVertical: 32,
