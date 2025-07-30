@@ -47,11 +47,15 @@ const Appointment: React.FC = () => {
     if (res) setAppointments(res);
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchBookingsByUserId(user._id);
-    }
-  }, [user]);
+  // Tự động reload khi tab được focus
+  const { useFocusEffect } = require('@react-navigation/native');
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && user._id) {
+        fetchBookingsByUserId(user._id);
+      }
+    }, [user?._id])
+  );
 
   const onRefresh = async () => {
     if (!user?._id) return;
@@ -803,6 +807,7 @@ const styles = StyleSheet.create({
   serviceInfo: {
     flexDirection: "row",
     marginBottom: 16,
+    alignItems: "flex-start",
   },
   serviceImageContainer: {
     marginRight: 12,
