@@ -161,6 +161,14 @@ const Header: React.FC = () => {
         return { bg: "#FEF3C7", text: "#B45309" };
       case "completed":
         return { bg: "#E0E7FF", text: "#3730A3" };
+      case "checked-in":
+        return { bg: "#D1FAE5", text: "#047857" };
+      case "checked-out":
+        return { bg: "#E0E7FF", text: "#3730A3" };
+      case "cancelled":
+        return { bg: "#F3F4F6", text: "#6B7280" };
+      case "re-examination":  
+        return { bg: "#E0E7FF", text: "#3730A3" };        
       default:
         return { bg: "#F3F4F6", text: "#6B7280" };
     }
