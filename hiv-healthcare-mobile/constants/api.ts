@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
   BOOKINGS_BY_DOCTOR_NAME: (doctorName: string) =>
     `/bookings/doctor/${doctorName}`,
   BOOKINGS_BY_USER_ID: (userId: string) => `/bookings/user/${userId}`,
+  BOOKINGS_CHECK: "/bookings/check",
 
   // ===== NOTIFICATION =====
   NOTIFICATIONS: "/notifications",

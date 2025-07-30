@@ -63,3 +63,25 @@ export const getBookingsByDoctorName = async (
     throw error;
   }
 };
+
+export const checkExistingBookings = async (doctorName: string, bookingDate: string): Promise<string[]> => {
+  console.log('Checking bookings for Doctor:', doctorName, 'Date:', bookingDate);
+  try {
+    const res = await apiClient.get(API_ENDPOINTS.BOOKINGS_CHECK, {
+      params: {
+        doctorName,
+        bookingDate,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error checking bookings:', error.response?.data || error.message);
+    } else if (error instanceof Error) {
+      console.error('Error checking bookings:', error.message);
+    } else {
+      console.error('An unknown error occurred while checking bookings');
+    }
+    throw new Error('Không thể kiểm tra lịch hẹn!');
+  }
+};

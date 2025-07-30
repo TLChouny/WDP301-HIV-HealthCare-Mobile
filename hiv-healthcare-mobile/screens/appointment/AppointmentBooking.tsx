@@ -19,6 +19,7 @@ import Toast from "react-native-toast-message";
 import { createBooking } from "../../api/bookingApi";
 import { getServiceById } from "../../api/categoryApi";
 import { getAllUsers } from "../../api/userApi";
+import { checkExistingBookings } from "../../api/bookingApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { Service } from "../../types/Service";
 import { User } from "../../types/User";
@@ -56,13 +57,15 @@ const AppointmentBooking: React.FC = () => {
   const [service, setService] = useState<Service | null>(null);
   const [serviceLoading, setServiceLoading] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [formData, setFormData] = useState<FormData>({
     customerName: "",
     customerPhone: "",
     customerEmail: "",
     notes: "",
   });
+  // Thêm state lưu các khung giờ đã đặt trước
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [loadingBookedTimes, setLoadingBookedTimes] = useState(false);
   const route = useRoute<any>();
   const { serviceId } = route.params;
 
@@ -168,6 +171,12 @@ const AppointmentBooking: React.FC = () => {
       return;
     }
 
+    // Kiểm tra lại khung giờ đã đặt trước khi booking
+    if (bookedTimes.includes(selectedTime)) {
+      showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
+      return;
+    }
+
     if (!isAnonymous && (!formData.customerName || !formData.customerPhone)) {
       showToast("Vui lòng điền họ tên và số điện thoại!");
       return;
@@ -199,9 +208,29 @@ const AppointmentBooking: React.FC = () => {
         return;
       }
 
-      await createBooking(bookingData).then((data) => {
+      // Trước khi booking, gọi lại API để lấy bookedTimes mới nhất
+      const bookingDateStr = selectedDate.toISOString().split("T")[0];
+      if (!selectedDoctorObj || !selectedDoctorObj.userName) {
+        showToast("Không tìm thấy thông tin bác sĩ!");
+        setLoading(false);
+        return;
+      }
+      const latestBookedTimes = await checkExistingBookings(selectedDoctorObj.userName, bookingDateStr);
+      if (Array.isArray(latestBookedTimes) && latestBookedTimes.includes(selectedTime)) {
+        showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
+        setBookedTimes(latestBookedTimes);
+        setSelectedTime("");
+        setLoading(false);
+        return;
+      }
+
+      await createBooking(bookingData).then(async (data) => {
         showToast("Đặt lịch khám thành công!", "success");
-        navigation.navigate("MainTabs");
+        setSelectedTime("");
+        // Sau khi đặt lịch thành công, gọi lại API để lấy bookedTimes mới nhất
+        const updatedBookedTimes = await checkExistingBookings(selectedDoctorObj.userName, bookingDateStr);
+        setBookedTimes(Array.isArray(updatedBookedTimes) ? updatedBookedTimes : []);
+        navigation.navigate("MainTabs", { screen: "Home" });
       });
     } catch (err: any) {
       console.error("Booking error:", err);
@@ -223,18 +252,98 @@ const AppointmentBooking: React.FC = () => {
   }, [selectedDate, doctors]);
 
   useEffect(() => {
+    // Chỉ lấy khung giờ nếu đã chọn bác sĩ và ngày
+    if (!selectedDoctor || !selectedDate) {
+      setTimeSlots([]);
+      setSelectedTime("");
+      return;
+    }
     const doctorObj = doctors.find((d) => d._id === selectedDoctor);
-    if (doctorObj && doctorObj.startTimeInDay && doctorObj.endTimeInDay) {
-      const slots = generateTimeSlots(
-        doctorObj.startTimeInDay,
-        doctorObj.endTimeInDay
-      );
-      setTimeSlots(slots);
+    if (
+      doctorObj &&
+      doctorObj.startTimeInDay &&
+      doctorObj.endTimeInDay &&
+      doctorObj.dayOfWeek &&
+      doctorObj.startDay &&
+      doctorObj.endDay
+    ) {
+      // Kiểm tra ngày đã chọn có nằm trong ngày làm việc của bác sĩ không
+      const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", { weekday: "long" });
+      const startDay = new Date(doctorObj.startDay ?? '1970-01-01');
+      const endDay = new Date(doctorObj.endDay ?? '2100-12-31');
+      // Chỉ lấy giờ làm việc nếu ngày hợp lệ
+      if (
+        Array.isArray(doctorObj.dayOfWeek) &&
+        doctorObj.dayOfWeek.includes(selectedDayOfWeek) &&
+        selectedDate >= startDay &&
+        selectedDate <= endDay
+      ) {
+        let slots = generateTimeSlots(
+          doctorObj.startTimeInDay,
+          doctorObj.endTimeInDay
+        );
+        // Nếu chọn ngày hôm nay thì loại bỏ các khung giờ đã qua
+        const now = new Date();
+        const today = now.toISOString().split("T")[0];
+        const selectedDay = selectedDate.toISOString().split("T")[0];
+        if (selectedDay === today) {
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          slots = slots.filter((slot) => {
+            const [h, m] = slot.split(":").map(Number);
+            const slotMinutes = h * 60 + m;
+            return slotMinutes > currentMinutes;
+          });
+        }
+        setTimeSlots(slots);
+      } else {
+        // Không phải ngày làm việc của bác sĩ
+        setTimeSlots([]);
+      }
     } else {
       setTimeSlots([]);
     }
     setSelectedTime("");
-  }, [selectedDoctor, doctors]);
+  }, [selectedDoctor, doctors, selectedDate]);
+
+  // Gọi API kiểm tra các khung giờ đã đặt trước khi chọn bác sĩ và ngày, chỉ khi timeSlots có giá trị
+  useEffect(() => {
+    const fetchBookedTimes = async () => {
+      if (!selectedDoctor || !selectedDate || timeSlots.length === 0) {
+        setBookedTimes([]);
+        return;
+      }
+      setLoadingBookedTimes(true);
+      try {
+        const doctorObj = doctors.find((d) => d._id === selectedDoctor);
+        if (!doctorObj) {
+          setBookedTimes([]);
+          return;
+        }
+        const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", { weekday: "long" });
+        const startDay = new Date(doctorObj.startDay ?? '1970-01-01');
+        const endDay = new Date(doctorObj.endDay ?? '2100-12-31');
+        // Chỉ gọi API nếu đúng ngày làm việc của bác sĩ
+        if (
+          doctorObj.dayOfWeek &&
+          doctorObj.dayOfWeek.includes(selectedDayOfWeek) &&
+          selectedDate >= startDay &&
+          selectedDate <= endDay
+        ) {
+          const bookingDate = `${selectedDate.getFullYear()}-${(selectedDate.getMonth()+1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+          console.log('Checking bookings for Doctor:', doctorObj.userName, 'Date:', bookingDate);
+          const times = await checkExistingBookings(doctorObj.userName, bookingDate);
+          setBookedTimes(Array.isArray(times) ? times : []);
+        } else {
+          setBookedTimes([]);
+        }
+      } catch (err) {
+        setBookedTimes([]);
+      } finally {
+        setLoadingBookedTimes(false);
+      }
+    };
+    fetchBookedTimes();
+  }, [selectedDoctor, selectedDate, doctors, timeSlots]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -509,33 +618,59 @@ const AppointmentBooking: React.FC = () => {
                 </Text>
               </View>
 
-              {timeSlots.length > 0 ? (
-                <View style={styles.timeSlotContainer}>
-                  {timeSlots.map((time) => (
+              {loadingBookedTimes ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#0D9488" />
+                <Text style={styles.loadingText}>Đang kiểm tra lịch hẹn...</Text>
+              </View>
+            ) : timeSlots.length > 0 ? (
+              <View style={styles.timeSlotContainer}>
+                {timeSlots.map((time) => {
+                  const isBooked = bookedTimes.includes(time);
+                  return (
                     <TouchableOpacity
                       key={time}
                       style={[
                         styles.timeSlot,
                         selectedTime === time && styles.timeSlotSelected,
+                        isBooked && styles.timeSlotBooked,
                       ]}
-                      onPress={() => setSelectedTime(time)}
+                      onPress={() => {
+                        if (!isBooked) setSelectedTime(time);
+                      }}
+                      disabled={isBooked}
                     >
-                      <Text
-                        style={[
-                          styles.timeSlotText,
-                          selectedTime === time && styles.timeSlotTextSelected,
-                        ]}
-                      >
-                        {time}
-                      </Text>
+                      <View style={{alignItems: 'center'}}>
+                        <Text
+                          style={[
+                            styles.timeSlotText,
+                            selectedTime === time && styles.timeSlotTextSelected,
+                            isBooked && styles.timeSlotTextBooked,
+                          ]}
+                        >
+                          {time}
+                        </Text>
+                        {isBooked && (
+                          <Text style={styles.bookedLabel}>Đã đặt</Text>
+                        )}
+                      </View>
                     </TouchableOpacity>
-                  ))}
-                </View>
-              ) : (
+                  );
+                })}
+              </View>
+            ) : (
                 <View style={styles.noTimeSlots}>
                   <Ionicons name="time-outline" size={48} color="#E5E7EB" />
                   <Text style={styles.noTimeSlotsText}>
-                    Vui lòng chọn bác sĩ để xem giờ khả dụng
+                    {selectedDate && (() => {
+                      const now = new Date();
+                      const today = now.toISOString().split("T")[0];
+                      const selectedDay = selectedDate.toISOString().split("T")[0];
+                      if (selectedDay === today) {
+                        return "Không còn khung giờ nào khả dụng trong ngày hôm nay";
+                      }
+                      return "Vui lòng chọn bác sĩ để xem giờ khả dụng";
+                    })()}
                   </Text>
                 </View>
               )}
@@ -874,6 +1009,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+    justifyContent: "center",
   },
   timeSlot: {
     paddingVertical: 12,
@@ -884,10 +1020,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     minWidth: 80,
     alignItems: "center",
+    opacity: 1,
   },
   timeSlotSelected: {
     borderColor: "#0D9488",
     backgroundColor: "#0D9488",
+  },
+  timeSlotBooked: {
+    opacity: 0.5,
+    backgroundColor: "#F3F4F6",
+    borderColor: "#EF4444",
   },
   timeSlotText: {
     fontSize: 14,
@@ -896,6 +1038,16 @@ const styles = StyleSheet.create({
   },
   timeSlotTextSelected: {
     color: "#ffffff",
+  },
+  timeSlotTextBooked: {
+    color: "#EF4444",
+    textDecorationLine: "line-through",
+  },
+  bookedLabel: {
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: 2,
+    fontWeight: "bold",
   },
   noTimeSlots: {
     alignItems: "center",
