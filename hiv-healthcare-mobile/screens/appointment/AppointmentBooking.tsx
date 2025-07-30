@@ -32,7 +32,7 @@ interface FormData {
 
 type RootStackParamList = {
   AppointmentBooking: undefined;
-  MainTabs: undefined;
+  MainTabs: { screen: string };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

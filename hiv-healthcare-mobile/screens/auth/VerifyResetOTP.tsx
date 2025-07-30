@@ -10,10 +10,11 @@ import {
   Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { useAuth } from "../../contexts/AuthContext";
+import { Clipboard } from 'react-native';
 
 // Navigation types
 type RootStackParamList = {
@@ -24,11 +25,7 @@ type RootStackParamList = {
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type RouteProp = {
-  params: {
-    email: string;
-  };
-};
+type VerifyResetOTPRouteProp = RouteProp<RootStackParamList, "VerifyResetOTP">;
 
 const VerifyResetOTP: React.FC = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -38,7 +35,8 @@ const VerifyResetOTP: React.FC = () => {
   const [canResend, setCanResend] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<RouteProp>();
+    const route = useRoute<VerifyResetOTPRouteProp>();
+  
   const { email } = route.params;
 
   const { verifyResetOTP, forgotPassword, loading: authLoading } = useAuth();
@@ -239,25 +237,26 @@ const VerifyResetOTP: React.FC = () => {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref) => {
+  inputRefs.current[index] = ref;
+}}
+
                 style={[
                   styles.otpInput,
                   digit && styles.otpInputFilled,
                   isLoading && styles.otpInputDisabled,
                 ]}
                 value={digit}
-                onChangeText={(value) => handleOtpChange(value, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                maxLength={1}
-                keyboardType="numeric"
-                textAlign="center"
-                selectionColor="#DC2626"
-                editable={!isLoading}
-                onPaste={(e) => {
-                  if (index === 0) {
-                    handlePaste(e.nativeEvent.text);
-                  }
-                }}
+                onChangeText={(value) => {
+  if (index === 0 && value.length === 6 && /^\d{6}$/.test(value)) {
+    const digits = value.split('');
+    setOtp(digits);
+    inputRefs.current[5]?.focus(); // optional
+  } else {
+    handleOtpChange(value, index);
+  }
+}}
+
               />
             ))}
           </View>

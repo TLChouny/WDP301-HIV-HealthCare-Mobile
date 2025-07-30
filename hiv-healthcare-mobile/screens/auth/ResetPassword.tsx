@@ -11,10 +11,14 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { useAuth } from "../../contexts/AuthContext";
+
+type ResetPasswordRouteProp = RouteProp<RootStackParamList, "ResetPassword">;
+
+
 
 // Navigation types
 type RootStackParamList = {
@@ -28,11 +32,6 @@ type RootStackParamList = {
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type RouteProp = {
-  params: {
-    resetToken: string;
-  };
-};
 
 const ResetPassword: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -42,9 +41,9 @@ const ResetPassword: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const route = useRoute<ResetPasswordRouteProp>();
 
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<RouteProp>();
   const { resetToken } = route.params;
 
   const { resetPassword, loading: authLoading } = useAuth();
@@ -266,7 +265,7 @@ const ResetPassword: React.FC = () => {
                     style={[
                       styles.passwordStrengthFill,
                       {
-                        width: passwordStrength.width,
+                        width: passwordStrength.width as `${number}%`,
                         backgroundColor: passwordStrength.color,
                       },
                     ]}

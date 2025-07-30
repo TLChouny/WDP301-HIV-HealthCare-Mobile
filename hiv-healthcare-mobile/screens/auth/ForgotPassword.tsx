@@ -21,6 +21,7 @@ type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   ResetPasswordOTP: { email: string };
+  VerifyResetOTP: { email: string };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -82,7 +83,7 @@ const ForgotPassword: React.FC = () => {
 
       // Navigate to OTP verification screen after a short delay
       setTimeout(() => {
-        navigation.navigate("VerifyResetOTP", {
+        navigation.navigate("ResetPasswordOTP", {
           email: email.trim().toLowerCase(),
         });
       }, 2000);
