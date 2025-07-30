@@ -177,7 +177,7 @@ const Header: React.FC = () => {
   const getStatusText = useCallback((status: string) => {
     switch (status) {
       case "confirmed":
-        return "Đã xác nhận";
+        return "Đã điểm danh";
       case "pending":
         return "Chờ xác nhận";
       case "completed":
