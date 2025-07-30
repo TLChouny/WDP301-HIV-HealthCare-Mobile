@@ -174,6 +174,14 @@ const Header: React.FC = () => {
         return "Chờ xác nhận";
       case "completed":
         return "Hoàn thành";
+      case "checked-in":
+        return "Đã xác nhận";
+      case "checked-out":
+        return "Đã thanh toán";
+      case "cancelled":
+        return "Đã hủy";
+      case "re-examination":
+        return "Tái khám";    
       default:
         return "Không xác định";
     }
