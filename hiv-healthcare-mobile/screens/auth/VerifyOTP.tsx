@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { useAuth } from "../../contexts/AuthContext";
@@ -25,7 +25,12 @@ type RootStackParamList = {
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type VerifyOTPRouteProp = RouteProp<RootStackParamList, 'VerifyOTP'>;
+type RouteProp = {
+  params: {
+    email: string;
+    type?: "register" | "reset";
+  };
+};
 
 const { width } = Dimensions.get("window");
 
@@ -37,7 +42,7 @@ const VerifyOTP: React.FC = () => {
   const [canResend, setCanResend] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<VerifyOTPRouteProp>();
+  const route = useRoute<RouteProp>();
   const { email, type = "register" } = route.params;
 
   const {
@@ -231,7 +236,16 @@ const VerifyOTP: React.FC = () => {
     }
   };
 
-
+  const handlePaste = (text: string) => {
+    // Handle paste event for OTP
+    const numbers = text.replace(/\D/g, "").slice(0, 6);
+    if (numbers.length === 6) {
+      const newOtp = numbers.split("");
+      setOtp(newOtp);
+      // Auto submit on paste
+      handleSubmit(newOtp);
+    }
+  };
 
   const isLoading = loading || authLoading;
   const otpString = otp.join("");
@@ -261,9 +275,7 @@ const VerifyOTP: React.FC = () => {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => {
-                  inputRefs.current[index] = ref;
-                }}
+                ref={(ref) => (inputRefs.current[index] = ref)}
                 style={[
                   styles.otpInput,
                   digit && styles.otpInputFilled,
@@ -277,6 +289,11 @@ const VerifyOTP: React.FC = () => {
                 textAlign="center"
                 selectionColor="#0D9488"
                 editable={!isLoading}
+                onPaste={(e) => {
+                  if (index === 0) {
+                    handlePaste(e.nativeEvent.text);
+                  }
+                }}
               />
             ))}
           </View>

@@ -201,7 +201,7 @@ const AppointmentBooking: React.FC = () => {
 
       await createBooking(bookingData).then((data) => {
         showToast("Đặt lịch khám thành công!", "success");
-        navigation.navigate("MainTabs", { screen: "Home" });
+        navigation.navigate("MainTabs");
       });
     } catch (err: any) {
       console.error("Booking error:", err);
