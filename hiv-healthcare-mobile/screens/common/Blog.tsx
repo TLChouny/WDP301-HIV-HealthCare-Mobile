@@ -64,7 +64,7 @@ const BlogPage: React.FC = () => {
             blogContent:
               "HIV (Human Immunodeficiency Virus) là virus gây suy giảm miễn dịch ở người. Virus này tấn công hệ thống miễn dịch của cơ thể, làm suy yếu khả năng chống lại các bệnh nhiễm trùng và một số loại ung thư.",
             blogImage:
-              "https://via.placeholder.com/300x200/0D9488/FFFFFF?text=HIV+Education",
+              "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=250&fit=crop&crop=center",
             blogAuthor: "BS. Nguyễn Văn A",
             categoryId: "1",
             createdAt: "2024-01-15T00:00:00Z",
@@ -76,7 +76,7 @@ const BlogPage: React.FC = () => {
             blogContent:
               "Liệu pháp kháng virus ngược (ARV) là phương pháp điều trị chính cho HIV. Các thuốc ARV không thể chữa khỏi HIV nhưng có thể kiểm soát virus và giúp người nhiễm HIV sống một cuộc sống khỏe mạnh.",
             blogImage:
-              "https://via.placeholder.com/300x200/10B981/FFFFFF?text=ARV+Treatment",
+              "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=250&fit=crop&crop=center",
             blogAuthor: "BS. Trần Thị B",
             categoryId: "2",
             createdAt: "2024-01-10T00:00:00Z",
@@ -88,7 +88,7 @@ const BlogPage: React.FC = () => {
             blogContent:
               "Xét nghiệm HIV là bước đầu tiên quan trọng để phát hiện sớm và điều trị kịp thời. Việc xét nghiệm định kỳ giúp bảo vệ bản thân và cộng đồng.",
             blogImage:
-              "https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=HIV+Testing",
+              "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop&crop=center",
             blogAuthor: "BS. Lê Văn C",
             categoryId: "1",
             createdAt: "2024-01-05T00:00:00Z",
@@ -100,11 +100,59 @@ const BlogPage: React.FC = () => {
             blogContent:
               "Hỗ trợ tâm lý đóng vai trò quan trọng trong việc giúp người nhiễm HIV thích ứng với tình trạng bệnh và duy trì chất lượng cuộc sống tốt.",
             blogImage:
-              "https://via.placeholder.com/300x200/8B5CF6/FFFFFF?text=Mental+Health",
+              "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=250&fit=crop&crop=center",
             blogAuthor: "ThS. Nguyễn Thị D",
             categoryId: "3",
             createdAt: "2024-01-01T00:00:00Z",
             updatedAt: "2024-01-01T00:00:00Z",
+          },
+          {
+            _id: "5",
+            blogTitle: "Chế độ dinh dưỡng cho người nhiễm HIV",
+            blogContent:
+              "Dinh dưỡng đóng vai trò quan trọng trong việc tăng cường hệ miễn dịch và cải thiện chất lượng cuộc sống cho người nhiễm HIV. Một chế độ ăn cân bằng giúp cơ thể khỏe mạnh hơn.",
+            blogImage:
+              "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=250&fit=crop&crop=center",
+            blogAuthor: "ThS. Trần Văn E",
+            categoryId: "1",
+            createdAt: "2023-12-28T00:00:00Z",
+            updatedAt: "2023-12-28T00:00:00Z",
+          },
+          {
+            _id: "6",
+            blogTitle: "Nghiên cứu mới về vaccine HIV",
+            blogContent:
+              "Các nhà khoa học đang nghiên cứu và phát triển vaccine HIV với những tiến bộ đáng kể. Đây là hy vọng mới cho việc phòng ngừa HIV trong tương lai.",
+            blogImage:
+              "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=250&fit=crop&crop=center",
+            blogAuthor: "PGS.TS. Lê Thị F",
+            categoryId: "4",
+            createdAt: "2023-12-20T00:00:00Z",
+            updatedAt: "2023-12-20T00:00:00Z",
+          },
+          {
+            _id: "7",
+            blogTitle: "Phòng ngừa lây nhiễm HIV",
+            blogContent:
+              "Hiểu biết về các con đường lây nhiễm HIV và cách phòng ngừa hiệu quả là chìa khóa để bảo vệ bản thân và cộng đồng khỏi căn bệnh này.",
+            blogImage:
+              "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=250&fit=crop&crop=center",
+            blogAuthor: "BS. Phạm Văn G",
+            categoryId: "1",
+            createdAt: "2023-12-15T00:00:00Z",
+            updatedAt: "2023-12-15T00:00:00Z",
+          },
+          {
+            _id: "8",
+            blogTitle: "Hành trình vượt qua HIV",
+            blogContent:
+              "Những câu chuyện cảm động về hành trình vượt qua HIV của các bệnh nhân, chia sẻ kinh nghiệm và động lực sống tích cực.",
+            blogImage:
+              "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop&crop=center",
+            blogAuthor: "ThS. Nguyễn Thị H",
+            categoryId: "3",
+            createdAt: "2023-12-10T00:00:00Z",
+            updatedAt: "2023-12-10T00:00:00Z",
           },
         ];
         resolve(mockBlogs);
@@ -227,11 +275,20 @@ const BlogPage: React.FC = () => {
           }}
         >
           {item.blogImage && (
-            <Image
-              source={{ uri: item.blogImage }}
-              style={styles.blogImage}
-              resizeMode="cover"
-            />
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: item.blogImage }}
+                style={styles.blogImage}
+                resizeMode="cover"
+              />
+              <View style={styles.imageOverlay}>
+                <View style={styles.categoryTag}>
+                  <Text style={styles.categoryTagText}>
+                    {getCategoryName(item.categoryId)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           )}
           <View style={styles.blogCardBody}>
             <Text style={styles.blogTitle} numberOfLines={2}>
@@ -242,15 +299,16 @@ const BlogPage: React.FC = () => {
               {item.blogContent && item.blogContent.length > 120 ? "..." : ""}
             </Text>
             <View style={styles.blogMeta}>
-              <Text style={styles.blogAuthor}>
-                {item.blogAuthor || "Ẩn danh"}
-              </Text>
-              <Text style={styles.blogDate}>{formatDate(item.createdAt)}</Text>
-            </View>
-            <View style={styles.categoryTag}>
-              <Text style={styles.categoryTagText}>
-                {getCategoryName(item.categoryId)}
-              </Text>
+              <View style={styles.authorInfo}>
+                <Ionicons name="person-circle-outline" size={16} color="#9CA3AF" />
+                <Text style={styles.blogAuthor}>
+                  {item.blogAuthor || "Ẩn danh"}
+                </Text>
+              </View>
+              <View style={styles.dateInfo}>
+                <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+                <Text style={styles.blogDate}>{formatDate(item.createdAt)}</Text>
+              </View>
             </View>
           </View>
         </TouchableOpacity>
@@ -593,17 +651,27 @@ const styles = StyleSheet.create({
   },
   blogCardContent: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
     overflow: "hidden",
+  },
+  imageContainer: {
+    position: "relative",
+    width: "100%",
+    height: 140,
   },
   blogImage: {
     width: "100%",
-    height: 120,
+    height: "100%",
+  },
+  imageOverlay: {
+    position: "absolute",
+    top: 12,
+    right: 12,
   },
   blogCardBody: {
     padding: 12,
@@ -624,28 +692,44 @@ const styles = StyleSheet.create({
   blogMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
+  },
+  authorInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   blogAuthor: {
     fontSize: 12,
     color: "#9CA3AF",
-    flex: 1,
+    marginLeft: 4,
+  },
+  dateInfo: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   blogDate: {
     fontSize: 12,
     color: "#9CA3AF",
+    marginLeft: 4,
   },
   categoryTag: {
     alignSelf: "flex-start",
-    backgroundColor: "#F0FDFA",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: "rgba(13, 148, 136, 0.9)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryTagText: {
-    fontSize: 12,
-    color: "#0D9488",
-    fontWeight: "500",
+    fontSize: 11,
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
   emptyContainer: {
     alignItems: "center",
