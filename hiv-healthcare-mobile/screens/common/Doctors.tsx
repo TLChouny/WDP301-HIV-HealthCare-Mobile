@@ -298,20 +298,26 @@ const Doctors: React.FC = () => {
 
   const renderDoctorCard = (doctor: User): React.ReactElement => (
     <View key={doctor._id} style={styles.doctorCard}>
-      {/* Avatar */}
-      <View style={styles.avatarContainer}>
-        {doctor.avatar ? (
-          <Image source={{ uri: doctor.avatar }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person" size={32} color="#0D9488" />
+      {/* Header with Avatar and Basic Info */}
+      <View style={styles.doctorHeader}>
+        <View style={styles.avatarContainer}>
+          {doctor.avatar ? (
+            <Image source={{ uri: doctor.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={32} color="#0D9488" />
+            </View>
+          )}
+        </View>
+        <View style={styles.doctorBasicInfo}>
+          <Text style={styles.doctorName}>{doctor.userName}</Text>
+          <Text style={styles.doctorEmail}>{doctor.email || "Chưa cập nhật"}</Text>
+          <View style={styles.doctorBadge}>
+            <Ionicons name="medical" size={14} color="#0D9488" />
+            <Text style={styles.doctorBadgeText}>Bác sĩ chuyên khoa</Text>
           </View>
-        )}
+        </View>
       </View>
-
-      {/* Name & Email */}
-      <Text style={styles.doctorName}>{doctor.userName}</Text>
-      <Text style={styles.doctorEmail}>{doctor.email || "Chưa cập nhật"}</Text>
 
       {/* Accordions */}
       <View style={styles.accordionsContainer}>
@@ -344,42 +350,68 @@ const Doctors: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Hero Section */}
-      <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>Đội ngũ Y Bác sĩ</Text>
-        <Text style={styles.heroSubtitle}>
-          Đội ngũ y bác sĩ của chúng tôi là những chuyên gia hàng đầu trong lĩnh
-          vực chăm sóc sức khỏe cho người sống chung với HIV. Với kinh nghiệm và
-          chuyên môn sâu rộng, chúng tôi cam kết mang đến dịch vụ y tế chất
-          lượng cao nhất.
-        </Text>
+      {/* Header with Back Button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Đội ngũ Y Bác sĩ</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      {/* Doctors List */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0D9488" />
-            <Text style={styles.loadingText}>Đang tải danh sách bác sĩ...</Text>
+      {/* Hero Section - Compact */}
+      <View style={styles.heroSection}>
+        <View style={styles.heroHeader}>
+          <View style={styles.heroIconContainer}>
+            <Ionicons name="medical" size={32} color="#FFFFFF" />
           </View>
-        ) : doctors.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>Chưa có bác sĩ nào</Text>
-            <Text style={styles.emptyDescription}>
-              Danh sách bác sĩ sẽ được cập nhật sớm nhất.
+          <View style={styles.heroTextContainer}>
+            <Text style={styles.heroTitle}>Đội ngũ Y Bác sĩ</Text>
+            <Text style={styles.heroSubtitle}>
+              {doctors.length} bác sĩ chuyên khoa sẵn sàng hỗ trợ bạn
             </Text>
           </View>
-        ) : (
-          <View style={styles.doctorsContainer}>
-            {doctors.map(renderDoctorCard)}
-          </View>
-        )}
-      </ScrollView>
+        </View>
+      </View>
+
+             {/* Doctors List */}
+       <ScrollView
+         style={styles.scrollView}
+         showsVerticalScrollIndicator={false}
+         contentContainerStyle={styles.scrollContent}
+       >
+         {loading ? (
+           <View style={styles.loadingContainer}>
+             <ActivityIndicator size="large" color="#0D9488" />
+             <Text style={styles.loadingText}>Đang tải danh sách bác sĩ...</Text>
+           </View>
+         ) : doctors.length === 0 ? (
+           <View style={styles.emptyContainer}>
+             <Ionicons name="people-outline" size={64} color="#9CA3AF" />
+             <Text style={styles.emptyTitle}>Chưa có bác sĩ nào</Text>
+             <Text style={styles.emptyDescription}>
+               Danh sách bác sĩ sẽ được cập nhật sớm nhất.
+             </Text>
+           </View>
+         ) : (
+           <>
+             <View style={styles.sectionHeader}>
+               <Text style={styles.sectionTitle}>Danh sách bác sĩ</Text>
+               <View style={styles.doctorCount}>
+                 <Ionicons name="people" size={16} color="#0D9488" />
+                 <Text style={styles.doctorCountText}>{doctors.length} bác sĩ</Text>
+               </View>
+             </View>
+             <View style={styles.doctorsContainer}>
+               {doctors.map(renderDoctorCard)}
+             </View>
+           </>
+         )}
+       </ScrollView>
     </SafeAreaView>
   );
 };
@@ -389,32 +421,90 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#0D9488",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  headerSpacer: {
+    width: 40,
+  },
   heroSection: {
     backgroundColor: "#0D9488",
     paddingHorizontal: 20,
-    paddingVertical: 32,
+    paddingVertical: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
+  heroHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  heroIconContainer: {
+    marginRight: 16,
+  },
+  heroTextContainer: {
+    flex: 1,
+  },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 4,
   },
   heroSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-    lineHeight: 24,
-    maxWidth: "100%",
+    lineHeight: 20,
   },
+
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  doctorCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  doctorCountText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0D9488",
+    marginLeft: 6,
   },
   loadingContainer: {
     flex: 1,
@@ -429,38 +519,63 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: 60,
+    paddingVertical: 80,
+    paddingHorizontal: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#374151",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 20,
+    marginBottom: 12,
   },
   emptyDescription: {
     fontSize: 16,
     color: "#6B7280",
     textAlign: "center",
+    lineHeight: 24,
   },
   doctorsContainer: {
     gap: 20,
   },
   doctorCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
+    borderRadius: 20,
+    padding: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 5,
     borderWidth: 1,
     borderColor: "#F3F4F6",
   },
+  doctorHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   avatarContainer: {
-    marginBottom: 16,
+    marginRight: 16,
+  },
+  doctorBasicInfo: {
+    flex: 1,
+  },
+  doctorBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginTop: 4,
+  },
+  doctorBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#0D9488",
+    marginLeft: 4,
   },
   avatar: {
     width: 80,
@@ -496,16 +611,19 @@ const styles = StyleSheet.create({
   },
   accordionContainer: {
     backgroundColor: "#F9FAFB",
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   accordionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    backgroundColor: "#F8FAFC",
   },
   accordionTitleContainer: {
     flexDirection: "row",

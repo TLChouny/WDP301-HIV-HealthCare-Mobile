@@ -106,6 +106,11 @@ const ServiceByCategoryId: React.FC = () => {
             <Ionicons name="medical-outline" size={40} color="#9CA3AF" />
           </View>
         )}
+        <View style={styles.imageOverlay}>
+          <View style={styles.priceTag}>
+            <Text style={styles.priceTagText}>{formatPrice(service.price)}</Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.cardContent}>
@@ -113,27 +118,23 @@ const ServiceByCategoryId: React.FC = () => {
           {service.serviceName}
         </Text>
 
-        <Text style={styles.serviceDescription} numberOfLines={3}>
+        <Text style={styles.serviceDescription} numberOfLines={2}>
           {service.serviceDescription}
         </Text>
 
         {service.duration && (
           <View style={styles.durationContainer}>
-            <Ionicons name="time-outline" size={16} color="#6B7280" />
+            <Ionicons name="time-outline" size={14} color="#6B7280" />
             <Text style={styles.durationText}>{service.duration} phút</Text>
           </View>
         )}
-
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>{formatPrice(service.price)}</Text>
-        </View>
 
         <TouchableOpacity
           style={styles.detailButton}
           onPress={() => handleServicePress(service._id)}
         >
           <Text style={styles.detailButtonText}>Xem chi tiết</Text>
-          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -162,12 +163,14 @@ const ServiceByCategoryId: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {currentCategoryName}
@@ -191,21 +194,36 @@ const ServiceByCategoryId: React.FC = () => {
           }
           showsVerticalScrollIndicator={false}
         >
-          {/* Title Section */}
-          <View style={styles.titleSection}>
-            <Text style={styles.title}>{currentCategoryName}</Text>
-            <Text style={styles.subtitle}>
-              Khám phá các dịch vụ chất lượng cao trong danh mục này
-            </Text>
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <View style={styles.heroContent}>
+              <View style={styles.heroIconContainer}>
+                <Ionicons name="medical" size={32} color="#FFFFFF" />
+              </View>
+              <Text style={styles.heroTitle}>{currentCategoryName}</Text>
+              <Text style={styles.heroSubtitle}>
+                {services.length} dịch vụ chất lượng cao sẵn sàng phục vụ bạn
+              </Text>
+            </View>
           </View>
 
-          {/* Services Grid */}
+          {/* Services Section */}
           {services.length === 0 ? (
             renderEmptyState()
           ) : (
-            <View style={styles.servicesContainer}>
-              <View style={styles.servicesGrid}>
-                {services.map((service) => renderServiceCard(service))}
+            <View style={styles.servicesSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Danh sách dịch vụ</Text>
+                <View style={styles.serviceCount}>
+                  <Ionicons name="list" size={16} color="#0D9488" />
+                  <Text style={styles.serviceCountText}>{services.length} dịch vụ</Text>
+                </View>
+              </View>
+              
+              <View style={styles.servicesContainer}>
+                <View style={styles.servicesGrid}>
+                  {services.map((service) => renderServiceCard(service))}
+                </View>
               </View>
             </View>
           )}
@@ -225,10 +243,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    paddingVertical: 16,
+    backgroundColor: "#0D9488",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -236,15 +252,18 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   backButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
     flex: 1,
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
+    color: "#FFFFFF",
     textAlign: "center",
     marginHorizontal: 16,
   },
@@ -254,24 +273,31 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  titleSection: {
-    paddingHorizontal: 16,
+  heroSection: {
+    backgroundColor: "#0D9488",
+    paddingHorizontal: 20,
     paddingVertical: 24,
-    backgroundColor: "#FFFFFF",
-    marginBottom: 8,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  title: {
+  heroContent: {
+    alignItems: "center",
+  },
+  heroIconContainer: {
+    marginBottom: 12,
+  },
+  heroTitle: {
     fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
+    fontWeight: "bold",
+    color: "#FFFFFF",
     textAlign: "center",
     marginBottom: 8,
   },
-  subtitle: {
+  heroSubtitle: {
     fontSize: 16,
-    color: "#6B7280",
+    color: "rgba(255, 255, 255, 0.9)",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 22,
   },
   loadingContainer: {
     flex: 1,
@@ -323,6 +349,35 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#0D9488",
   },
+  servicesSection: {
+    paddingTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  serviceCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDFA",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  serviceCountText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0D9488",
+    marginLeft: 6,
+  },
   servicesContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
@@ -335,21 +390,22 @@ const styles = StyleSheet.create({
   serviceCard: {
     width: cardWidth,
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#F3F4F6",
     overflow: "hidden",
   },
   imageContainer: {
     width: "100%",
-    height: 120,
+    height: 140,
     backgroundColor: "#F3F4F6",
+    position: "relative",
   },
   serviceImage: {
     width: "100%",
@@ -362,26 +418,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F9FAFB",
   },
+  imageOverlay: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+  },
+  priceTag: {
+    backgroundColor: "rgba(13, 148, 136, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  priceTagText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
   cardContent: {
-    padding: 12,
+    padding: 16,
   },
   serviceName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
-    marginBottom: 6,
+    color: "#1F2937",
+    marginBottom: 8,
     lineHeight: 22,
   },
   serviceDescription: {
     fontSize: 14,
     color: "#6B7280",
     lineHeight: 20,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   durationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   durationText: {
     marginLeft: 4,
@@ -389,22 +466,19 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontWeight: "500",
   },
-  priceContainer: {
-    marginBottom: 12,
-  },
-  priceText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0D9488",
-  },
   detailButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#0D9488",
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: "#0D9488",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   detailButtonText: {
     color: "#FFFFFF",

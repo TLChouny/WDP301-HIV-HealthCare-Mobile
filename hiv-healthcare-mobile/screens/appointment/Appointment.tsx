@@ -6,6 +6,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   Modal,
   RefreshControl,
   ScrollView,
@@ -478,10 +479,19 @@ const Appointment: React.FC = () => {
               </View>
 
               <ScrollView style={styles.viewModalContent}>
-                <Text style={styles.appointmentServiceName}>
-                  {selectedAppointment.serviceId?.serviceName ||
-                    "Không xác định"}
-                </Text>
+              {selectedAppointment.meetLink ? (
+                      <Text
+                        style={styles.linkValue}
+                        onPress={() =>
+                          selectedAppointment.meetLink &&
+                          Linking.openURL(selectedAppointment.meetLink)
+                        }
+                      >
+                        Tham gia ngay
+                      </Text>
+                    ) : (
+                      <Text style={styles.detailValue}>Không có</Text>
+                    )}
 
                 <View style={styles.appointmentDetails}>
                   <View style={styles.detailRow}>
@@ -1028,6 +1038,15 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     flex: 2,
     textAlign: "right",
+  },
+  linkValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0D9488",
+    textDecorationLine: "underline",
+    textAlign: "right",
+    flexShrink: 1,
+    maxWidth: "60%",
   },
   detailStatusBadge: {
     flexDirection: "row",
