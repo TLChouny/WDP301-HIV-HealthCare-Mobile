@@ -195,7 +195,7 @@ const ContactPage: React.FC = () => {
           </View>
         </View>
 
-        {/* Contact Form */}
+        {/* Contact Form
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gửi tin nhắn</Text>
           <View style={styles.formContainer}>
@@ -273,7 +273,7 @@ const ContactPage: React.FC = () => {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* FAQ Section */}
         <View style={styles.section}>
