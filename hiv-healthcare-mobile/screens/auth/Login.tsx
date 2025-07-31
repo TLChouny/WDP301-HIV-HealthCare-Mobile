@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
+  LogBox
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +15,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 import { RootStackParamList } from "../../components/Navigation";
 import { useAuth } from "../../contexts/AuthContext";
+
+LogBox.ignoreLogs([
+  "The action 'NAVIGATE' with payload",
+]);
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -86,6 +91,8 @@ const Login: React.FC = () => {
         autoHide: true,
         visibilityTime: 2000,
       });
+
+      navigation.navigate('MainTabs', { screen: 'Home' });
     } catch (error: any) {
       let errorMessage = "Vui lòng kiểm tra lại thông tin đăng nhập";
 
