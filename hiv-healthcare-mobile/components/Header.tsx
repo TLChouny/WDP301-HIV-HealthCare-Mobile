@@ -408,14 +408,14 @@ const Header: React.FC = () => {
             </TouchableOpacity>
 
             {/* Appointment Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.appointmentButton}
               onPress={() => navigateToScreen("Appointment")}
               activeOpacity={0.8}
             >
               <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
               <Text style={styles.appointmentButtonText}>Đặt lịch khám</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Auth Buttons */}
             {user ? (

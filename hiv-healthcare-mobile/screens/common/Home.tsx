@@ -60,7 +60,7 @@ const MeetingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.modalOption}
             onPress={handleAppointmentBooking}
           >
@@ -74,7 +74,7 @@ const MeetingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           >
             <Ionicons name="videocam-outline" size={24} color="#0D9488" />
             <Text style={styles.modalOptionText}>Tư vấn trực tuyến</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </Modal>
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
                 Đội ngũ y bác sĩ chuyên khoa giàu kinh nghiệm, tận tâm và không
                 kỳ thị
               </Text>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.heroButton}
                 onPress={handleBookAppointment}
               >
@@ -177,7 +177,7 @@ const Home: React.FC = () => {
                 <Text style={styles.heroButtonText}>
                   Đặt lịch tư vấn trực tuyến
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
 
             <View style={styles.heroImageContainer}>
