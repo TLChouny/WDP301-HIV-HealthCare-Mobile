@@ -42,7 +42,7 @@ const VerifyOTP: React.FC = () => {
   const [canResend, setCanResend] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<RouteProp>();
+  const route = useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'VerifyOTP'>>();
   const { email, type = "register" } = route.params;
 
   const {
@@ -275,7 +275,9 @@ const VerifyOTP: React.FC = () => {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref) => {
+                  inputRefs.current[index] = ref;
+                }}
                 style={[
                   styles.otpInput,
                   digit && styles.otpInputFilled,
@@ -289,11 +291,6 @@ const VerifyOTP: React.FC = () => {
                 textAlign="center"
                 selectionColor="#0D9488"
                 editable={!isLoading}
-                onPaste={(e) => {
-                  if (index === 0) {
-                    handlePaste(e.nativeEvent.text);
-                  }
-                }}
               />
             ))}
           </View>
@@ -364,7 +361,7 @@ const VerifyOTP: React.FC = () => {
         </View>
 
         {/* Development Helper */}
-        {__DEV__ && (
+        {/* {__DEV__ && (
           <View style={styles.devContainer}>
             <Text style={styles.devTitle}>Development Mode</Text>
             <TouchableOpacity
@@ -377,7 +374,7 @@ const VerifyOTP: React.FC = () => {
               <Text style={styles.devButtonText}>Fill Test OTP (123456)</Text>
             </TouchableOpacity>
           </View>
-        )}
+        )} */}
       </View>
     </KeyboardAvoidingView>
   );

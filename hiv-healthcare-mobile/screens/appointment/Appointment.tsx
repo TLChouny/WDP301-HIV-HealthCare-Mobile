@@ -6,7 +6,6 @@ import {
   Dimensions,
   FlatList,
   Image,
-  Linking,
   Modal,
   RefreshControl,
   ScrollView,
@@ -171,6 +170,8 @@ const Appointment: React.FC = () => {
         return "Đã hủy";
       case "checked-out":
         return "Đã thanh toán";
+      case "re-examination":
+        return "Tái khám";
       default:
         return "Không xác định";
     }
@@ -190,6 +191,8 @@ const Appointment: React.FC = () => {
         return { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" };
       case "checked-out":
         return { bg: "#FED7AA", text: "#C2410C", border: "#FDBA74" };
+      case "re-examination":
+        return { bg: "#f0c8a9ff", text: "#0A4D8C", border: "#A7D3F1" };
       default:
         return { bg: "#F3F4F6", text: "#374151", border: "#E5E7EB" };
     }
