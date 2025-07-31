@@ -13,6 +13,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
@@ -503,9 +504,27 @@ const Appointment: React.FC = () => {
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Meeting Link:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedAppointment.meetLink || "Không có"}
-                    </Text>
+                    {selectedAppointment.meetLink ? (
+                      <TouchableOpacity
+                        style={styles.detailValue}
+                        onPress={() => {
+                          const meetLink = selectedAppointment.meetLink;
+                          if (meetLink) {
+                            const url = meetLink.startsWith('http')
+                              ? meetLink
+                              : `https://${meetLink}`;
+                            Linking.openURL(url);
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ color: '#0D9488', textAlign: 'right', textDecorationLine: 'underline' }}>
+                          Mở Google Meet
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={styles.detailValue}>Không có</Text>
+                    )}
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Trạng thái:</Text>
