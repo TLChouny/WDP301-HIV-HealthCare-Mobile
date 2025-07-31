@@ -435,7 +435,15 @@ const Home: React.FC = () => {
               <View key={index} style={styles.doctorCard}>
                 <View style={styles.doctorImageContainer}>
                   <View style={styles.doctorImagePlaceholder}>
-                    <Ionicons name="person-outline" size={40} color="#0D9488" />
+                    {doctor.avatar ? (
+                      <Image
+                        source={{ uri: doctor.avatar }}
+                        style={{ width: 60, height: 60, borderRadius: 30 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="person-outline" size={40} color="#0D9488" />
+                    )}
                   </View>
                 </View>
                 <View style={styles.doctorInfo}>
@@ -470,6 +478,7 @@ const Home: React.FC = () => {
                 date: "15/05/2025",
                 comments: 5,
                 author: "BS. Nguyễn Văn A",
+                image: require("../../assets/doingubacsi2.png"),
               },
               {
                 title: "Sống khỏe mạnh với HIV - Những điều cần biết",
@@ -478,17 +487,26 @@ const Home: React.FC = () => {
                 date: "10/05/2025",
                 comments: 8,
                 author: "ThS. Lê Văn C",
+                image: require("../../assets/doingubacsi3.png"),
               },
             ].map((article, index) => (
               <View key={index} style={styles.blogCard}>
                 <View style={styles.blogImageContainer}>
-                  <View style={styles.blogImagePlaceholder}>
-                    <Ionicons
-                      name="document-text-outline"
-                      size={40}
-                      color="#0D9488"
+                  {article.image ? (
+                    <Image
+                      source={article.image}
+                      style={{ width: 60, height: 60, borderRadius: 30 }}
+                      resizeMode="cover"
                     />
-                  </View>
+                  ) : (
+                    <View style={styles.blogImagePlaceholder}>
+                      <Ionicons
+                        name="document-text-outline"
+                        size={40}
+                        color="#0D9488"
+                      />
+                    </View>
+                  )}
                 </View>
                 <View style={styles.blogContent}>
                   <View style={styles.blogMeta}>
