@@ -97,8 +97,14 @@ const Login: React.FC = () => {
       let errorMessage = "Vui lòng kiểm tra lại thông tin đăng nhập";
 
       if (error.message) {
-        if (error.message.includes("email")) {
-          errorMessage = "Email không tồn tại trong hệ thống";
+        if (
+          error.message.includes("email") ||
+          error.message.toLowerCase().includes("not found") ||
+          error.message.toLowerCase().includes("không tồn tại") ||
+          error.message.toLowerCase().includes("user not found") ||
+          error.message.toLowerCase().includes("tài khoản không tồn tại")
+        ) {
+          errorMessage = "Tài khoản không tồn tại trong hệ thống";
         } else if (
           error.message.includes("password") ||
           error.message.includes("mật khẩu")
