@@ -19,6 +19,8 @@ import { User } from "../../types/User";
 import { getAllUsers } from "../../api/userApi";
 import { RootStackParamList } from "../../components/Navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { getBookingsByUserId } from "../../api/bookingApi";
+import Toast from "react-native-toast-message";
 
 const images = {
   doctor: require("../../assets/doingubacsi.png"),
@@ -88,7 +90,7 @@ const Home: React.FC = () => {
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [doctors, setDoctors] = useState<User[]>([]);
   // Use auth context to determine if user is authenticated
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const showAuthButtons = !isAuthenticated;
   // Fetch doctors when Home is focused
   useFocusEffect(
@@ -125,6 +127,39 @@ const Home: React.FC = () => {
 
   const handleBookAppointment = () => {
     setShowMeetingModal(true);
+  };
+
+  const handleBookConsultation = async () => {
+    try {
+      if (user) {
+        const bookings = await getBookingsByUserId(user._id);
+        const hasPendingOnlineBooking = bookings.some(
+          (b) =>
+            b.serviceId.serviceName === "Tư vấn trực tuyến" &&
+            b.status !== "completed"
+        );
+
+        if (hasPendingOnlineBooking) {
+          Toast.show({
+            type: "error",
+            text1: "Lỗi",
+            text2:
+              "Bạn đã có lịch tư vấn trực tuyến chưa hoàn tất. Vui lòng hoàn tất trước khi đặt mới.",
+          });
+          return;
+        }
+      }
+      navigation.push("AppointmentBooking", {
+        serviceId: "6884c1b3dc415d604a31d5f5",
+      });
+    } catch (error) {
+      console.error("❌ Error checking bookings:", error);
+      Toast.show({
+        type: "error",
+        text1: "Lỗi",
+        text2: "Không thể kiểm tra lịch hẹn. Vui lòng thử lại sau.",
+      });
+    }
   };
 
   return (
@@ -169,15 +204,15 @@ const Home: React.FC = () => {
                 Đội ngũ y bác sĩ chuyên khoa giàu kinh nghiệm, tận tâm và không
                 kỳ thị
               </Text>
-              {/* <TouchableOpacity
+              <TouchableOpacity
                 style={styles.heroButton}
-                onPress={handleBookAppointment}
+                onPress={handleBookConsultation}
               >
                 <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
                 <Text style={styles.heroButtonText}>
                   Đặt lịch tư vấn trực tuyến
                 </Text>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
 
             <View style={styles.heroImageContainer}>
@@ -442,7 +477,11 @@ const Home: React.FC = () => {
                         resizeMode="cover"
                       />
                     ) : (
-                      <Ionicons name="person-outline" size={40} color="#0D9488" />
+                      <Ionicons
+                        name="person-outline"
+                        size={40}
+                        color="#0D9488"
+                      />
                     )}
                   </View>
                 </View>

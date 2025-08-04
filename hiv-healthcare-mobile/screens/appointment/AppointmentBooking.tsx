@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  Image,
   ScrollView,
   StyleSheet,
   Switch,
@@ -170,8 +171,6 @@ const AppointmentBooking: React.FC = () => {
       showToast("Vui lòng chọn ngày, giờ và bác sĩ!");
       return;
     }
-
-    // Kiểm tra lại khung giờ đã đặt trước khi booking
     if (bookedTimes.includes(selectedTime)) {
       showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
       return;
@@ -215,8 +214,14 @@ const AppointmentBooking: React.FC = () => {
         setLoading(false);
         return;
       }
-      const latestBookedTimes = await checkExistingBookings(selectedDoctorObj.userName, bookingDateStr);
-      if (Array.isArray(latestBookedTimes) && latestBookedTimes.includes(selectedTime)) {
+      const latestBookedTimes = await checkExistingBookings(
+        selectedDoctorObj.userName,
+        bookingDateStr
+      );
+      if (
+        Array.isArray(latestBookedTimes) &&
+        latestBookedTimes.includes(selectedTime)
+      ) {
         showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
         setBookedTimes(latestBookedTimes);
         setSelectedTime("");
@@ -228,8 +233,13 @@ const AppointmentBooking: React.FC = () => {
         showToast("Đặt lịch khám thành công!", "success");
         setSelectedTime("");
         // Sau khi đặt lịch thành công, gọi lại API để lấy bookedTimes mới nhất
-        const updatedBookedTimes = await checkExistingBookings(selectedDoctorObj.userName, bookingDateStr);
-        setBookedTimes(Array.isArray(updatedBookedTimes) ? updatedBookedTimes : []);
+        const updatedBookedTimes = await checkExistingBookings(
+          selectedDoctorObj.userName,
+          bookingDateStr
+        );
+        setBookedTimes(
+          Array.isArray(updatedBookedTimes) ? updatedBookedTimes : []
+        );
         navigation.navigate("MainTabs", { screen: "Home" });
       });
     } catch (err: any) {
@@ -268,9 +278,11 @@ const AppointmentBooking: React.FC = () => {
       doctorObj.endDay
     ) {
       // Kiểm tra ngày đã chọn có nằm trong ngày làm việc của bác sĩ không
-      const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", { weekday: "long" });
-      const startDay = new Date(doctorObj.startDay ?? '1970-01-01');
-      const endDay = new Date(doctorObj.endDay ?? '2100-12-31');
+      const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", {
+        weekday: "long",
+      });
+      const startDay = new Date(doctorObj.startDay ?? "1970-01-01");
+      const endDay = new Date(doctorObj.endDay ?? "2100-12-31");
       // Chỉ lấy giờ làm việc nếu ngày hợp lệ
       if (
         Array.isArray(doctorObj.dayOfWeek) &&
@@ -319,9 +331,11 @@ const AppointmentBooking: React.FC = () => {
           setBookedTimes([]);
           return;
         }
-        const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", { weekday: "long" });
-        const startDay = new Date(doctorObj.startDay ?? '1970-01-01');
-        const endDay = new Date(doctorObj.endDay ?? '2100-12-31');
+        const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+        });
+        const startDay = new Date(doctorObj.startDay ?? "1970-01-01");
+        const endDay = new Date(doctorObj.endDay ?? "2100-12-31");
         // Chỉ gọi API nếu đúng ngày làm việc của bác sĩ
         if (
           doctorObj.dayOfWeek &&
@@ -329,9 +343,24 @@ const AppointmentBooking: React.FC = () => {
           selectedDate >= startDay &&
           selectedDate <= endDay
         ) {
-          const bookingDate = `${selectedDate.getFullYear()}-${(selectedDate.getMonth()+1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-          console.log('Checking bookings for Doctor:', doctorObj.userName, 'Date:', bookingDate);
-          const times = await checkExistingBookings(doctorObj.userName, bookingDate);
+          const bookingDate = `${selectedDate.getFullYear()}-${(
+            selectedDate.getMonth() + 1
+          )
+            .toString()
+            .padStart(2, "0")}-${selectedDate
+            .getDate()
+            .toString()
+            .padStart(2, "0")}`;
+          console.log(
+            "Checking bookings for Doctor:",
+            doctorObj.userName,
+            "Date:",
+            bookingDate
+          );
+          const times = await checkExistingBookings(
+            doctorObj.userName,
+            bookingDate
+          );
           setBookedTimes(Array.isArray(times) ? times : []);
         } else {
           setBookedTimes([]);
@@ -344,7 +373,88 @@ const AppointmentBooking: React.FC = () => {
     };
     fetchBookedTimes();
   }, [selectedDoctor, selectedDate, doctors, timeSlots]);
+  const calculateEndTime = (
+    startTime: string,
+    duration: number = 30
+  ): string => {
+    const [hour, minute] = startTime.split(":").map(Number);
+    const total = hour * 60 + minute + duration;
+    const endHour = Math.floor(total / 60) % 24;
+    const endMinute = total % 60;
+    return `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(
+      2,
+      "0"
+    )}`;
+  };
 
+  const timeToMinutes = (time: string): number => {
+    if (!time || typeof time !== "string" || !time.includes(":")) {
+      return 0;
+    }
+    try {
+      const [hour, minute] = time.split(":").map(Number);
+      return hour * 60 + minute;
+    } catch (error) {
+      console.error("Error converting time to minutes:", error);
+      return 0;
+    }
+  };
+
+  const isTimeSlotAvailable = (
+    slotTime: string,
+    duration: number,
+    bookedTimes: string[]
+  ): boolean => {
+    const slotStart = timeToMinutes(slotTime);
+    const slotEnd = slotStart + duration;
+
+    return !bookedTimes.some((bookedTime) => {
+      const bookedStart = timeToMinutes(bookedTime);
+      const bookedEnd = bookedStart + (service?.duration || 30);
+      return slotStart < bookedEnd && slotEnd > bookedStart;
+    });
+  };
+
+  // Kiểm tra xem thời gian có đã qua không
+  const isPastTime = (slotTime: string, date: Date): boolean => {
+    const now = new Date();
+    const slot = new Date(date);
+    const [hour, minute] = slotTime.split(":").map(Number);
+    slot.setHours(hour, minute, 0, 0);
+    return slot < now;
+  };
+
+  // Cập nhật hàm handleTimeSelection
+  const handleTimeSelection = (time: string) => {
+    const doctorObj = doctors.find((d) => d._id === selectedDoctor);
+
+    // Kiểm tra nếu thời gian đã qua (chỉ cho ngày hôm nay)
+    if (selectedDate) {
+      const today = new Date().toISOString().split("T")[0];
+      const selectedDay = selectedDate.toISOString().split("T")[0];
+
+      if (selectedDay === today && isPastTime(time, selectedDate)) {
+        showToast("Không thể chọn khung giờ đã qua!", "error");
+        return;
+      }
+    }
+
+    // Kiểm tra xung đột thời gian với duration
+    if (!isTimeSlotAvailable(time, service?.duration || 30, bookedTimes)) {
+      showToast(
+        `Bác sĩ ${
+          doctorObj?.userName || "này"
+        } đã có lịch hẹn từ ${time} đến ${calculateEndTime(
+          time,
+          service?.duration || 30
+        )}! Vui lòng chọn khung giờ khác.`,
+        "error"
+      );
+      return;
+    }
+
+    setSelectedTime(time);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -378,20 +488,45 @@ const AppointmentBooking: React.FC = () => {
           </View>
         ) : service ? (
           <View style={styles.serviceCard}>
-            <Text style={styles.serviceName}>{service.serviceName}</Text>
-            {service.price && (
-              <View style={styles.priceTag}>
-                <Text style={styles.priceText}>
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(service.price)}
+            <View style={styles.serviceContent}>
+              {service.serviceImage && (
+                <View style={styles.serviceImageContainer}>
+                  <Image
+                    source={{ uri: service.serviceImage }}
+                    style={styles.serviceImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceName}>{service.serviceName}</Text>
+                {service.price !== undefined && (
+                  <View style={styles.priceTag}>
+                    <Text style={styles.priceText}>
+                      {service.price === 0
+                        ? "Miễn phí"
+                        : new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(service.price)}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.serviceDescription}>
+                  {service.serviceDescription}
                 </Text>
+                {service.duration && (
+                  <Text style={styles.serviceDuration}>
+                    Thời lượng: {service.duration} phút
+                  </Text>
+                )}
+                {service.categoryId && (
+                  <Text style={styles.serviceCategory}>
+                    Danh mục: {service.categoryId.categoryName}
+                  </Text>
+                )}
               </View>
-            )}
-            <Text style={styles.serviceDescription}>
-              {service.serviceDescription}
-            </Text>
+            </View>
           </View>
         ) : null}
 
@@ -619,58 +754,89 @@ const AppointmentBooking: React.FC = () => {
               </View>
 
               {loadingBookedTimes ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#0D9488" />
-                <Text style={styles.loadingText}>Đang kiểm tra lịch hẹn...</Text>
-              </View>
-            ) : timeSlots.length > 0 ? (
-              <View style={styles.timeSlotContainer}>
-                {timeSlots.map((time) => {
-                  const isBooked = bookedTimes.includes(time);
-                  return (
-                    <TouchableOpacity
-                      key={time}
-                      style={[
-                        styles.timeSlot,
-                        selectedTime === time && styles.timeSlotSelected,
-                        isBooked && styles.timeSlotBooked,
-                      ]}
-                      onPress={() => {
-                        if (!isBooked) setSelectedTime(time);
-                      }}
-                      disabled={isBooked}
-                    >
-                      <View style={{alignItems: 'center'}}>
-                        <Text
-                          style={[
-                            styles.timeSlotText,
-                            selectedTime === time && styles.timeSlotTextSelected,
-                            isBooked && styles.timeSlotTextBooked,
-                          ]}
-                        >
-                          {time}
-                        </Text>
-                        {isBooked && (
-                          <Text style={styles.bookedLabel}>Đã đặt</Text>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ) : (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#0D9488" />
+                  <Text style={styles.loadingText}>
+                    Đang kiểm tra lịch hẹn...
+                  </Text>
+                </View>
+              ) : timeSlots.length > 0 ? (
+                <View style={styles.timeSlotContainer}>
+                  {timeSlots.map((time) => {
+                    const isPast = selectedDate
+                      ? (() => {
+                          const today = new Date().toISOString().split("T")[0];
+                          const selectedDay = selectedDate
+                            .toISOString()
+                            .split("T")[0];
+                          return (
+                            selectedDay === today &&
+                            isPastTime(time, selectedDate)
+                          );
+                        })()
+                      : false;
+
+                    // Kiểm tra xung đột với duration
+                    const isBooked = !isTimeSlotAvailable(
+                      time,
+                      service?.duration || 30,
+                      bookedTimes
+                    );
+                    const isDisabled = isPast || isBooked;
+
+                    return (
+                      <TouchableOpacity
+                        key={time}
+                        style={[
+                          styles.timeSlot,
+                          selectedTime === time && styles.timeSlotSelected,
+                          isDisabled && styles.timeSlotDisabled,
+                        ]}
+                        onPress={() => {
+                          if (!isDisabled) {
+                            handleTimeSelection(time);
+                          }
+                        }}
+                        disabled={isDisabled}
+                      >
+                        <View style={{ alignItems: "center" }}>
+                          <Text
+                            style={[
+                              styles.timeSlotText,
+                              selectedTime === time &&
+                                styles.timeSlotTextSelected,
+                              isDisabled && styles.timeSlotTextDisabled,
+                            ]}
+                          >
+                            {time}
+                          </Text>
+                          {isBooked && (
+                            <Text style={styles.bookedLabel}>Đã đặt</Text>
+                          )}
+                          {isPast && !isBooked && (
+                            <Text style={styles.pastLabel}>Quá giờ</Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (
                 <View style={styles.noTimeSlots}>
                   <Ionicons name="time-outline" size={48} color="#E5E7EB" />
                   <Text style={styles.noTimeSlotsText}>
-                    {selectedDate && (() => {
-                      const now = new Date();
-                      const today = now.toISOString().split("T")[0];
-                      const selectedDay = selectedDate.toISOString().split("T")[0];
-                      if (selectedDay === today) {
-                        return "Không còn khung giờ nào khả dụng trong ngày hôm nay";
-                      }
-                      return "Vui lòng chọn bác sĩ để xem giờ khả dụng";
-                    })()}
+                    {selectedDate &&
+                      (() => {
+                        const now = new Date();
+                        const today = now.toISOString().split("T")[0];
+                        const selectedDay = selectedDate
+                          .toISOString()
+                          .split("T")[0];
+                        if (selectedDay === today) {
+                          return "Không còn khung giờ nào khả dụng trong ngày hôm nay";
+                        }
+                        return "Vui lòng chọn bác sĩ để xem giờ khả dụng";
+                      })()}
                   </Text>
                 </View>
               )}
@@ -820,23 +986,55 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     marginBottom: 12,
   },
+  serviceContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 16,
+  },
+  serviceImageContainer: {
+    flexShrink: 0,
+  },
+  serviceImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  serviceInfo: {
+    flex: 1,
+    minHeight: 100,
+    justifyContent: "center",
+  },
   priceTag: {
     alignSelf: "flex-start",
     backgroundColor: "#D1FAE5",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 8,
   },
   priceText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#065F46",
   },
   serviceDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6B7280",
-    lineHeight: 24,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  serviceDuration: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  serviceCategory: {
+    fontSize: 14,
+    color: "#0D9488",
+    lineHeight: 20,
+    fontWeight: "500",
   },
   loadingText: {
     fontSize: 16,
@@ -1121,6 +1319,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#ffffff",
+  },
+  timeSlotDisabled: {
+    opacity: 0.5,
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
+  },
+  timeSlotTextDisabled: {
+    color: "#9CA3AF",
+  },
+  pastLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 2,
+    fontWeight: "bold",
   },
 });
 
