@@ -36,7 +36,6 @@ const ServiceDetail: React.FC = () => {
 
   const [service, setService] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (!serviceId) return;
 

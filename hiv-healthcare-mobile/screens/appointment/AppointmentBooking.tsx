@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
-  Image,
   ScrollView,
   StyleSheet,
   Switch,
@@ -45,11 +44,11 @@ const AppointmentBooking: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
 
-  // State management
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [filteredDoctors, setFilteredDoctors] = useState<User[]>([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [doctors, setDoctors] = useState<User[]>([]);
@@ -64,11 +63,13 @@ const AppointmentBooking: React.FC = () => {
     customerEmail: "",
     notes: "",
   });
-  // Thêm state lưu các khung giờ đã đặt trước
-  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
-  const [loadingBookedTimes, setLoadingBookedTimes] = useState(false);
+
   const route = useRoute<any>();
   const { serviceId } = route.params;
+
+  const formattedDate = selectedDate
+    ? selectedDate.toISOString().split("T")[0]
+    : "";
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -87,6 +88,7 @@ const AppointmentBooking: React.FC = () => {
 
     fetchDoctors();
   }, []);
+
   useEffect(() => {
     if (serviceId) {
       setServiceLoading(true);
@@ -100,13 +102,8 @@ const AppointmentBooking: React.FC = () => {
     }
   }, [serviceId]);
 
-  // Utility functions
-  const generateTimeSlots = (
-    start: string,
-    end: string,
-    interval = 30
-  ): string[] => {
-    const slots: string[] = [];
+  const generateTimeSlots = (start: string, end: string, interval = 30) => {
+    const slots = [];
     const [startHour, startMinute] = start.split(":").map(Number);
     const [endHour, endMinute] = end.split(":").map(Number);
 
@@ -127,6 +124,41 @@ const AppointmentBooking: React.FC = () => {
     }
 
     return slots;
+  };
+
+  const calculateEndTime = (startTime: string, duration: number = 30) => {
+    const [hour, minute] = startTime.split(":").map(Number);
+    const total = hour * 60 + minute + duration;
+    const endHour = Math.floor(total / 60) % 24;
+    const endMinute = total % 60;
+    return `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(
+      2,
+      "0"
+    )}`;
+  };
+
+  const timeToMinutes = (time: string) => {
+    const [hour, minute] = time.split(":").map(Number);
+    return hour * 60 + minute;
+  };
+
+  const isTimeSlotAvailable = (slotTime: string, duration: number) => {
+    const slotStart = timeToMinutes(slotTime);
+    const slotEnd = slotStart + duration;
+
+    return !bookedSlots.some((bookedTime) => {
+      const bookedStart = timeToMinutes(bookedTime);
+      const bookedEnd = bookedStart + (service?.duration || 30); // Use service duration for booked slots
+      return slotStart < bookedEnd && slotEnd > bookedStart;
+    });
+  };
+
+  const isPastTime = (slotTime: string, date: Date): boolean => {
+    const now = new Date();
+    const slot = new Date(date);
+    const [hour, minute] = slotTime.split(":").map(Number);
+    slot.setHours(hour, minute, 0, 0);
+    return slot < now;
   };
 
   const filterDoctorsByDate = (doctors: User[], date: Date): User[] => {
@@ -166,13 +198,26 @@ const AppointmentBooking: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!selectedDate || !selectedTime || !selectedDoctor) {
-      showToast("Vui lòng chọn ngày, giờ và bác sĩ!");
+  const handleTimeSelection = (time: string) => {
+    const doctorObj = doctors.find((d) => d._id === selectedDoctor);
+    if (!isTimeSlotAvailable(time, service?.duration || 30)) {
+      showToast(
+        `Bác sĩ ${
+          doctorObj?.userName || "này"
+        } đã có lịch hẹn từ ${time} đến ${calculateEndTime(
+          time,
+          service?.duration || 30
+        )}! Vui lòng chọn khung giờ khác.`,
+        "error"
+      );
       return;
     }
-    if (bookedTimes.includes(selectedTime)) {
-      showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
+    setSelectedTime(time);
+  };
+
+  const handleSubmit = async () => {
+    if (!formattedDate || !selectedTime || !selectedDoctor) {
+      showToast("Vui lòng chọn ngày, giờ và bác sĩ!");
       return;
     }
 
@@ -188,273 +233,104 @@ const AppointmentBooking: React.FC = () => {
       );
 
       const bookingData = {
-        bookingDate: selectedDate.toISOString().split("T")[0],
+        bookingDate: formattedDate,
         startTime: selectedTime,
-        fullName: isAnonymous ? undefined : formData.customerName,
-        phone: isAnonymous ? undefined : formData.customerPhone,
-        email: isAnonymous ? undefined : formData.customerEmail,
+        customerName: isAnonymous ? undefined : formData.customerName,
+        customerPhone: isAnonymous ? undefined : formData.customerPhone,
+        customerEmail: isAnonymous ? undefined : formData.customerEmail,
         doctorName: selectedDoctorObj?.userName ?? undefined,
         notes: formData.notes,
-        serviceId: service?._id ?? undefined,
+        serviceId: service ?? undefined,
         currency: "VND",
         status: "pending" as const,
         isAnonymous,
-        userId: user?._id,
+        userId: user,
       };
 
-      if (!user || !user._id) {
+      if (!user) {
         showToast("Vui lòng đăng nhập để đặt lịch!");
         return;
       }
 
-      // Trước khi booking, gọi lại API để lấy bookedTimes mới nhất
-      const bookingDateStr = selectedDate.toISOString().split("T")[0];
-      if (!selectedDoctorObj || !selectedDoctorObj.userName) {
-        showToast("Không tìm thấy thông tin bác sĩ!");
-        setLoading(false);
-        return;
-      }
-      const latestBookedTimes = await checkExistingBookings(
-        selectedDoctorObj.userName,
-        bookingDateStr
-      );
-      if (
-        Array.isArray(latestBookedTimes) &&
-        latestBookedTimes.includes(selectedTime)
-      ) {
-        showToast("Khung giờ này đã được đặt trước, vui lòng chọn giờ khác!");
-        setBookedTimes(latestBookedTimes);
-        setSelectedTime("");
-        setLoading(false);
-        return;
-      }
+      console.log("Booking data sending to BE:", bookingData);
+      await createBooking(bookingData);
+      showToast("Đặt lịch khám thành công!", "success");
 
-      await createBooking(bookingData).then(async (data) => {
-        showToast("Đặt lịch khám thành công!", "success");
-        setSelectedTime("");
-        // Sau khi đặt lịch thành công, gọi lại API để lấy bookedTimes mới nhất
-        const updatedBookedTimes = await checkExistingBookings(
-          selectedDoctorObj.userName,
-          bookingDateStr
-        );
-        setBookedTimes(
-          Array.isArray(updatedBookedTimes) ? updatedBookedTimes : []
-        );
+      setTimeout(() => {
         navigation.navigate("MainTabs", { screen: "Home" });
-      });
+      }, 2000);
     } catch (err: any) {
       console.error("Booking error:", err);
-      showToast(err.message || "Đặt lịch thất bại.");
+      if (err.message?.toLowerCase().includes("service")) {
+        showToast("Dịch vụ không tồn tại!");
+      } else if (err.message?.toLowerCase().includes("doctor")) {
+        showToast("Bác sĩ không hợp lệ!");
+      } else if (err.message?.toLowerCase().includes("time")) {
+        showToast("Thời gian đặt lịch không khả dụng!");
+      } else {
+        showToast(err.message || "Đặt lịch thất bại.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (selectedDate && doctors.length > 0) {
       const filtered = filterDoctorsByDate(doctors, selectedDate);
       setFilteredDoctors(filtered);
-      if (filtered.length === 0) {
-        setSelectedDoctor("");
-      }
     } else {
       setFilteredDoctors(doctors);
     }
   }, [selectedDate, doctors]);
 
+  // Fetch booked slots (giống web pattern)
   useEffect(() => {
-    // Chỉ lấy khung giờ nếu đã chọn bác sĩ và ngày
-    if (!selectedDoctor || !selectedDate) {
-      setTimeSlots([]);
-      setSelectedTime("");
-      return;
-    }
+    const fetchBookedSlots = async () => {
+      if (selectedDoctor && formattedDate) {
+        try {
+          const doctorObj = doctors.find((d) => d._id === selectedDoctor);
+          if (doctorObj) {
+            const booked = await checkExistingBookings(
+              doctorObj.userName,
+              formattedDate
+            );
+            setBookedSlots(booked.map((b: any) => b.startTime)); // Adjust based on actual response structure
+          } else {
+            setBookedSlots([]);
+          }
+        } catch (err) {
+          console.error("Check bookings error:", err);
+          showToast("Không thể kiểm tra khung giờ khả dụng!");
+          setBookedSlots([]);
+        }
+      } else {
+        setBookedSlots([]);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [selectedDoctor, formattedDate, doctors]);
+
+  // Generate time slots (giống web - dựa trên bookedSlots)
+  useEffect(() => {
     const doctorObj = doctors.find((d) => d._id === selectedDoctor);
     if (
       doctorObj &&
       doctorObj.startTimeInDay &&
       doctorObj.endTimeInDay &&
-      doctorObj.dayOfWeek &&
-      doctorObj.startDay &&
-      doctorObj.endDay
+      formattedDate
     ) {
-      // Kiểm tra ngày đã chọn có nằm trong ngày làm việc của bác sĩ không
-      const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", {
-        weekday: "long",
-      });
-      const startDay = new Date(doctorObj.startDay ?? "1970-01-01");
-      const endDay = new Date(doctorObj.endDay ?? "2100-12-31");
-      // Chỉ lấy giờ làm việc nếu ngày hợp lệ
-      if (
-        Array.isArray(doctorObj.dayOfWeek) &&
-        doctorObj.dayOfWeek.includes(selectedDayOfWeek) &&
-        selectedDate >= startDay &&
-        selectedDate <= endDay
-      ) {
-        let slots = generateTimeSlots(
-          doctorObj.startTimeInDay,
-          doctorObj.endTimeInDay
-        );
-        // Nếu chọn ngày hôm nay thì loại bỏ các khung giờ đã qua
-        const now = new Date();
-        const today = now.toISOString().split("T")[0];
-        const selectedDay = selectedDate.toISOString().split("T")[0];
-        if (selectedDay === today) {
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          slots = slots.filter((slot) => {
-            const [h, m] = slot.split(":").map(Number);
-            const slotMinutes = h * 60 + m;
-            return slotMinutes > currentMinutes;
-          });
-        }
-        setTimeSlots(slots);
-      } else {
-        // Không phải ngày làm việc của bác sĩ
-        setTimeSlots([]);
-      }
+      const allSlots = generateTimeSlots(
+        doctorObj.startTimeInDay,
+        doctorObj.endTimeInDay
+      );
+      setTimeSlots(allSlots);
     } else {
       setTimeSlots([]);
     }
-    setSelectedTime("");
-  }, [selectedDoctor, doctors, selectedDate]);
+  }, [bookedSlots, selectedDoctor, formattedDate, doctors]);
 
-  // Gọi API kiểm tra các khung giờ đã đặt trước khi chọn bác sĩ và ngày, chỉ khi timeSlots có giá trị
-  useEffect(() => {
-    const fetchBookedTimes = async () => {
-      if (!selectedDoctor || !selectedDate || timeSlots.length === 0) {
-        setBookedTimes([]);
-        return;
-      }
-      setLoadingBookedTimes(true);
-      try {
-        const doctorObj = doctors.find((d) => d._id === selectedDoctor);
-        if (!doctorObj) {
-          setBookedTimes([]);
-          return;
-        }
-        const selectedDayOfWeek = selectedDate.toLocaleDateString("en-US", {
-          weekday: "long",
-        });
-        const startDay = new Date(doctorObj.startDay ?? "1970-01-01");
-        const endDay = new Date(doctorObj.endDay ?? "2100-12-31");
-        // Chỉ gọi API nếu đúng ngày làm việc của bác sĩ
-        if (
-          doctorObj.dayOfWeek &&
-          doctorObj.dayOfWeek.includes(selectedDayOfWeek) &&
-          selectedDate >= startDay &&
-          selectedDate <= endDay
-        ) {
-          const bookingDate = `${selectedDate.getFullYear()}-${(
-            selectedDate.getMonth() + 1
-          )
-            .toString()
-            .padStart(2, "0")}-${selectedDate
-            .getDate()
-            .toString()
-            .padStart(2, "0")}`;
-          console.log(
-            "Checking bookings for Doctor:",
-            doctorObj.userName,
-            "Date:",
-            bookingDate
-          );
-          const times = await checkExistingBookings(
-            doctorObj.userName,
-            bookingDate
-          );
-          setBookedTimes(Array.isArray(times) ? times : []);
-        } else {
-          setBookedTimes([]);
-        }
-      } catch (err) {
-        setBookedTimes([]);
-      } finally {
-        setLoadingBookedTimes(false);
-      }
-    };
-    fetchBookedTimes();
-  }, [selectedDoctor, selectedDate, doctors, timeSlots]);
-  const calculateEndTime = (
-    startTime: string,
-    duration: number = 30
-  ): string => {
-    const [hour, minute] = startTime.split(":").map(Number);
-    const total = hour * 60 + minute + duration;
-    const endHour = Math.floor(total / 60) % 24;
-    const endMinute = total % 60;
-    return `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(
-      2,
-      "0"
-    )}`;
-  };
-
-  const timeToMinutes = (time: string): number => {
-    if (!time || typeof time !== "string" || !time.includes(":")) {
-      return 0;
-    }
-    try {
-      const [hour, minute] = time.split(":").map(Number);
-      return hour * 60 + minute;
-    } catch (error) {
-      console.error("Error converting time to minutes:", error);
-      return 0;
-    }
-  };
-
-  const isTimeSlotAvailable = (
-    slotTime: string,
-    duration: number,
-    bookedTimes: string[]
-  ): boolean => {
-    const slotStart = timeToMinutes(slotTime);
-    const slotEnd = slotStart + duration;
-
-    return !bookedTimes.some((bookedTime) => {
-      const bookedStart = timeToMinutes(bookedTime);
-      const bookedEnd = bookedStart + (service?.duration || 30);
-      return slotStart < bookedEnd && slotEnd > bookedStart;
-    });
-  };
-
-  // Kiểm tra xem thời gian có đã qua không
-  const isPastTime = (slotTime: string, date: Date): boolean => {
-    const now = new Date();
-    const slot = new Date(date);
-    const [hour, minute] = slotTime.split(":").map(Number);
-    slot.setHours(hour, minute, 0, 0);
-    return slot < now;
-  };
-
-  // Cập nhật hàm handleTimeSelection
-  const handleTimeSelection = (time: string) => {
-    const doctorObj = doctors.find((d) => d._id === selectedDoctor);
-
-    // Kiểm tra nếu thời gian đã qua (chỉ cho ngày hôm nay)
-    if (selectedDate) {
-      const today = new Date().toISOString().split("T")[0];
-      const selectedDay = selectedDate.toISOString().split("T")[0];
-
-      if (selectedDay === today && isPastTime(time, selectedDate)) {
-        showToast("Không thể chọn khung giờ đã qua!", "error");
-        return;
-      }
-    }
-
-    // Kiểm tra xung đột thời gian với duration
-    if (!isTimeSlotAvailable(time, service?.duration || 30, bookedTimes)) {
-      showToast(
-        `Bác sĩ ${
-          doctorObj?.userName || "này"
-        } đã có lịch hẹn từ ${time} đến ${calculateEndTime(
-          time,
-          service?.duration || 30
-        )}! Vui lòng chọn khung giờ khác.`,
-        "error"
-      );
-      return;
-    }
-
-    setSelectedTime(time);
-  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -488,45 +364,29 @@ const AppointmentBooking: React.FC = () => {
           </View>
         ) : service ? (
           <View style={styles.serviceCard}>
-            <View style={styles.serviceContent}>
-              {service.serviceImage && (
-                <View style={styles.serviceImageContainer}>
-                  <Image
-                    source={{ uri: service.serviceImage }}
-                    style={styles.serviceImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
-              <View style={styles.serviceInfo}>
-                <Text style={styles.serviceName}>{service.serviceName}</Text>
-                {service.price !== undefined && (
-                  <View style={styles.priceTag}>
-                    <Text style={styles.priceText}>
-                      {service.price === 0
-                        ? "Miễn phí"
-                        : new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(service.price)}
-                    </Text>
-                  </View>
-                )}
-                <Text style={styles.serviceDescription}>
-                  {service.serviceDescription}
+            <Text style={styles.serviceName}>{service.serviceName}</Text>
+            {service.price !== undefined && (
+              <View style={styles.priceTag}>
+                <Text style={styles.priceText}>
+                  Giá tiền:{" "}
+                  {service.price === 0
+                    ? "Miễn phí"
+                    : new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(service.price)}
                 </Text>
-                {service.duration && (
-                  <Text style={styles.serviceDuration}>
-                    Thời lượng: {service.duration} phút
-                  </Text>
-                )}
-                {service.categoryId && (
-                  <Text style={styles.serviceCategory}>
-                    Danh mục: {service.categoryId.categoryName}
-                  </Text>
-                )}
               </View>
-            </View>
+            )}
+            <Text style={styles.serviceDescription}>
+              {service.serviceDescription}
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Thời lượng: {service.duration} phút
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Danh mục: {service.categoryId?.categoryName}
+            </Text>
           </View>
         ) : null}
 
@@ -639,7 +499,7 @@ const AppointmentBooking: React.FC = () => {
               <Text style={styles.sectionTitle}>Chi tiết lịch hẹn</Text>
             </View>
 
-            {/* User Selection */}
+            {/* Doctor Selection */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Chọn bác sĩ <Text style={styles.required}>*</Text>
@@ -753,34 +613,15 @@ const AppointmentBooking: React.FC = () => {
                 </Text>
               </View>
 
-              {loadingBookedTimes ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#0D9488" />
-                  <Text style={styles.loadingText}>
-                    Đang kiểm tra lịch hẹn...
-                  </Text>
-                </View>
-              ) : timeSlots.length > 0 ? (
+              {timeSlots.length > 0 ? (
                 <View style={styles.timeSlotContainer}>
                   {timeSlots.map((time) => {
                     const isPast = selectedDate
-                      ? (() => {
-                          const today = new Date().toISOString().split("T")[0];
-                          const selectedDay = selectedDate
-                            .toISOString()
-                            .split("T")[0];
-                          return (
-                            selectedDay === today &&
-                            isPastTime(time, selectedDate)
-                          );
-                        })()
+                      ? isPastTime(time, selectedDate)
                       : false;
-
-                    // Kiểm tra xung đột với duration
                     const isBooked = !isTimeSlotAvailable(
                       time,
-                      service?.duration || 30,
-                      bookedTimes
+                      service?.duration || 30
                     );
                     const isDisabled = isPast || isBooked;
 
@@ -790,13 +631,10 @@ const AppointmentBooking: React.FC = () => {
                         style={[
                           styles.timeSlot,
                           selectedTime === time && styles.timeSlotSelected,
-                          isDisabled && styles.timeSlotDisabled,
+                          isBooked && styles.timeSlotBooked,
+                          isPast && styles.timeSlotPast,
                         ]}
-                        onPress={() => {
-                          if (!isDisabled) {
-                            handleTimeSelection(time);
-                          }
-                        }}
+                        onPress={() => handleTimeSelection(time)}
                         disabled={isDisabled}
                       >
                         <View style={{ alignItems: "center" }}>
@@ -805,7 +643,8 @@ const AppointmentBooking: React.FC = () => {
                               styles.timeSlotText,
                               selectedTime === time &&
                                 styles.timeSlotTextSelected,
-                              isDisabled && styles.timeSlotTextDisabled,
+                              isBooked && styles.timeSlotTextBooked,
+                              isPast && styles.timeSlotTextPast,
                             ]}
                           >
                             {time}
@@ -825,18 +664,7 @@ const AppointmentBooking: React.FC = () => {
                 <View style={styles.noTimeSlots}>
                   <Ionicons name="time-outline" size={48} color="#E5E7EB" />
                   <Text style={styles.noTimeSlotsText}>
-                    {selectedDate &&
-                      (() => {
-                        const now = new Date();
-                        const today = now.toISOString().split("T")[0];
-                        const selectedDay = selectedDate
-                          .toISOString()
-                          .split("T")[0];
-                        if (selectedDay === today) {
-                          return "Không còn khung giờ nào khả dụng trong ngày hôm nay";
-                        }
-                        return "Vui lòng chọn bác sĩ để xem giờ khả dụng";
-                      })()}
+                    Vui lòng chọn bác sĩ và ngày để xem giờ khả dụng
                   </Text>
                 </View>
               )}
@@ -986,55 +814,24 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     marginBottom: 12,
   },
-  serviceContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 16,
-  },
-  serviceImageContainer: {
-    flexShrink: 0,
-  },
-  serviceImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
-  },
-  serviceInfo: {
-    flex: 1,
-    minHeight: 100,
-    justifyContent: "center",
-  },
   priceTag: {
     alignSelf: "flex-start",
     backgroundColor: "#D1FAE5",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 12,
   },
   priceText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     color: "#065F46",
   },
   serviceDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#6B7280",
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  serviceDuration: {
-    fontSize: 14,
-    color: "#6B7280",
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  serviceCategory: {
-    fontSize: 14,
-    color: "#0D9488",
-    lineHeight: 20,
-    fontWeight: "500",
+    lineHeight: 24,
+    marginBottom: 8,
   },
   loadingText: {
     fontSize: 16,
@@ -1229,6 +1026,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     borderColor: "#EF4444",
   },
+  timeSlotPast: {
+    opacity: 0.5,
+    backgroundColor: "#F3F4F6",
+    borderColor: "#9CA3AF",
+  },
   timeSlotText: {
     fontSize: 14,
     fontWeight: "600",
@@ -1239,11 +1041,19 @@ const styles = StyleSheet.create({
   },
   timeSlotTextBooked: {
     color: "#EF4444",
-    textDecorationLine: "line-through",
+  },
+  timeSlotTextPast: {
+    color: "#9CA3AF",
   },
   bookedLabel: {
     fontSize: 12,
     color: "#EF4444",
+    marginTop: 2,
+    fontWeight: "bold",
+  },
+  pastLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
     marginTop: 2,
     fontWeight: "bold",
   },
@@ -1319,20 +1129,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#ffffff",
-  },
-  timeSlotDisabled: {
-    opacity: 0.5,
-    backgroundColor: "#F3F4F6",
-    borderColor: "#E5E7EB",
-  },
-  timeSlotTextDisabled: {
-    color: "#9CA3AF",
-  },
-  pastLabel: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 2,
-    fontWeight: "bold",
   },
 });
 

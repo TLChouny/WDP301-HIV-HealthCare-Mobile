@@ -49,7 +49,7 @@ const Appointment: React.FC = () => {
   };
 
   // Tự động reload khi tab được focus
-  const { useFocusEffect } = require('@react-navigation/native');
+  const { useFocusEffect } = require("@react-navigation/native");
   useFocusEffect(
     React.useCallback(() => {
       if (user && user._id) {
@@ -250,6 +250,7 @@ const Appointment: React.FC = () => {
         );
 
   const renderAppointmentCard = ({ item }: { item: Booking }) => {
+    console.log("item", item.serviceName);
     const statusColor = getStatusColor(item.status);
     const statusIcon = getStatusIcon(item.status);
 
@@ -325,18 +326,19 @@ const Appointment: React.FC = () => {
                 <Text style={styles.viewButtonText}>Xem</Text>
               </TouchableOpacity>
 
-              {item.status === "pending" && (
-                <>
-                  <TouchableOpacity
-                    style={styles.payButton}
-                    onPress={() => handleOpenPayment(item)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="card-outline" size={16} color="#FFFFFF" />
-                    <Text style={styles.payButtonText}>Thanh toán</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              {item.status === "pending" &&
+                item.serviceId.serviceName !== "Tư vấn trực tuyến" && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.payButton}
+                      onPress={() => handleOpenPayment(item)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="card-outline" size={16} color="#FFFFFF" />
+                      <Text style={styles.payButtonText}>Thanh toán</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
             </View>
           </View>
         </View>
@@ -482,19 +484,19 @@ const Appointment: React.FC = () => {
               </View>
 
               <ScrollView style={styles.viewModalContent}>
-              {selectedAppointment.meetLink ? (
-                      <Text
-                        style={styles.linkValue}
-                        onPress={() =>
-                          selectedAppointment.meetLink &&
-                          Linking.openURL(selectedAppointment.meetLink)
-                        }
-                      >
-                        Tham gia ngay
-                      </Text>
-                    ) : (
-                      <Text style={styles.detailValue}>Không có</Text>
-                    )}
+                {selectedAppointment.meetLink ? (
+                  <Text
+                    style={styles.linkValue}
+                    onPress={() =>
+                      selectedAppointment.meetLink &&
+                      Linking.openURL(selectedAppointment.meetLink)
+                    }
+                  >
+                    Tham gia ngay
+                  </Text>
+                ) : (
+                  <Text style={styles.detailValue}>Không có</Text>
+                )}
 
                 <View style={styles.appointmentDetails}>
                   <View style={styles.detailRow}>
@@ -523,7 +525,7 @@ const Appointment: React.FC = () => {
                         onPress={() => {
                           const meetLink = selectedAppointment.meetLink;
                           if (meetLink) {
-                            const url = meetLink.startsWith('http')
+                            const url = meetLink.startsWith("http")
                               ? meetLink
                               : `https://${meetLink}`;
                             Linking.openURL(url);
@@ -531,7 +533,13 @@ const Appointment: React.FC = () => {
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={{ color: '#0D9488', textAlign: 'right', textDecorationLine: 'underline' }}>
+                        <Text
+                          style={{
+                            color: "#0D9488",
+                            textAlign: "right",
+                            textDecorationLine: "underline",
+                          }}
+                        >
                           Mở Google Meet
                         </Text>
                       </TouchableOpacity>
