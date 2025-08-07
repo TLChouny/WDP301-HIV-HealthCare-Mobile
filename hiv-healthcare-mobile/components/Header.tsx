@@ -493,9 +493,12 @@ const Header: React.FC = () => {
                       <Text style={styles.notificationItemTitle}>
                         {notification.notiName}
                       </Text>
-                      <Text style={styles.notificationItemDescription} numberOfLines={2}>
-                        {notification.bookingId.serviceId.description || "Không có mô tả dịch vụ"}
-                      </Text>
+                      {/* Chỉ hiển thị mô tả nếu có */}
+                      {notification.bookingId.serviceId.description ? (
+                        <Text style={styles.notificationItemDescription} numberOfLines={2}>
+                          {notification.bookingId.serviceId.description}
+                        </Text>
+                      ) : null}
                       <Text style={styles.notificationItemService}>
                         Dịch vụ: {notification.bookingId.serviceId.serviceName}
                       </Text>
