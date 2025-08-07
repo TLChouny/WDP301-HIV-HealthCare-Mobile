@@ -468,6 +468,7 @@ const Header: React.FC = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Notification List */}
             <ScrollView style={styles.notificationList} showsVerticalScrollIndicator={false}>
               {notifications.length === 0 ? (
                 <View style={styles.emptyNotifications}>
@@ -493,10 +494,16 @@ const Header: React.FC = () => {
                         {notification.notiName}
                       </Text>
                       <Text style={styles.notificationItemDescription} numberOfLines={2}>
-                        {notification.notiDescription}
+                        {notification.bookingId.serviceId.description || "Không có mô tả dịch vụ"}
                       </Text>
                       <Text style={styles.notificationItemService}>
                         Dịch vụ: {notification.bookingId.serviceId.serviceName}
+                      </Text>
+                      {/* Ngày khám */}
+                      <Text style={styles.notificationItemTime}>
+                        Ngày khám: {notification.bookingId.bookingDate
+                          ? new Date(notification.bookingId.bookingDate).toLocaleDateString("vi-VN")
+                          : "Chưa xác định"}
                       </Text>
                       <Text style={styles.notificationItemTime}>
                         {notification.bookingId.startTime} -{" "}
@@ -554,6 +561,7 @@ const Header: React.FC = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Notification Detail Content */}
             {selectedNotification && (
               <ScrollView 
                 style={styles.notificationDetailContent}
@@ -585,6 +593,16 @@ const Header: React.FC = () => {
                   <Text style={styles.detailValue}>
                     {selectedNotification.bookingId.doctorName ||
                       "Chưa xác định"}
+                  </Text>
+                </View>
+
+                {/* Ngày khám */}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Ngày khám:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedNotification.bookingId.bookingDate
+                      ? new Date(selectedNotification.bookingId.bookingDate).toLocaleDateString("vi-VN")
+                      : "Chưa xác định"}
                   </Text>
                 </View>
 
