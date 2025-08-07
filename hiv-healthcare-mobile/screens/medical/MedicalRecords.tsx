@@ -312,6 +312,48 @@ const MedicalRecords: React.FC = () => {
 
     return frequencyMap[frequency] || frequency;
   };
+
+  // Thêm các hàm helper
+  const formatTestResult = (result: string | undefined) => {
+    if (!result) return "Chưa có";
+    switch (result) {
+      case "positive":
+        return "Dương tính";
+      case "negative":
+        return "Âm tính";
+      default:
+        return "Đang chờ";
+    }
+  };
+
+  const formatViralLoadInterpretation = (interpretation: string | undefined) => {
+    if (!interpretation) return "Chưa có";
+    switch (interpretation) {
+      case "undetectable":
+        return "Không phát hiện";
+      case "low":
+        return "Thấp";
+      case "high":
+        return "Cao";
+      default:
+        return interpretation;
+    }
+  };
+
+  const formatCD4Interpretation = (interpretation: string | undefined) => {
+    if (!interpretation) return "Chưa có";
+    switch (interpretation) {
+      case "normal":
+        return "Bình thường";
+      case "low":
+        return "Thấp";
+      case "very_low":
+        return "Rất thấp";
+      default:
+        return interpretation;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -720,21 +762,44 @@ const MedicalRecords: React.FC = () => {
                     </Text>
                   </View>
 
-                  {selectedRecord.reExaminationDate && (
-                    <View style={styles.modalField}>
-                      <Text style={styles.modalFieldLabel}>Ngày tái khám</Text>
-                      <Text style={styles.modalFieldValue}>
-                        {formatDate(selectedRecord.reExaminationDate)}
-                      </Text>
-                    </View>
-                  )}
+                  {/* Ngày tái khám */}
+                  <View style={styles.modalField}>
+                    <Text style={styles.modalFieldLabel}>Ngày tái khám</Text>
+                    <Text style={styles.modalFieldValue}>
+                      {selectedRecord.reExaminationDate
+                        ? new Date(selectedRecord.reExaminationDate).toLocaleDateString("vi-VN")
+                        : "Không tái khám"}
+                    </Text>
+                  </View>
+
+                  {/* Nhận xét của bác sĩ */}
+                  <View style={styles.modalField}>
+                    <Text style={styles.modalFieldLabel}>Nhận xét của bác sĩ</Text>
+                    <Text style={[styles.modalFieldValue, styles.descriptionText]}>
+                      {selectedRecord.notes || "Không có"}
+                    </Text>
+                  </View>
+
+                  {/* Ghi chú diễn giải */}
+                  <View style={styles.modalField}>
+                    <Text style={styles.modalFieldLabel}>Ghi chú diễn giải</Text>
+                    <Text style={[styles.modalFieldValue, styles.descriptionText]}>
+                      {selectedRecord.interpretationNote || "Không có"}
+                    </Text>
+                  </View>
+
+                  {/* Người thực hiện xét nghiệm */}
+                  <View style={styles.modalField}>
+                    <Text style={styles.modalFieldLabel}>Người thực hiện xét nghiệm</Text>
+                    <Text style={styles.modalFieldValue}>
+                      {selectedRecord.testerName || "Không có"}
+                    </Text>
+                  </View>
 
                   {selectedRecord.symptoms && (
                     <View style={styles.modalField}>
                       <Text style={styles.modalFieldLabel}>Triệu chứng</Text>
-                      <Text
-                        style={[styles.modalFieldValue, styles.descriptionText]}
-                      >
+                      <Text style={[styles.modalFieldValue, styles.descriptionText]}>
                         {selectedRecord.symptoms}
                       </Text>
                     </View>
@@ -742,9 +807,7 @@ const MedicalRecords: React.FC = () => {
 
                   <View style={styles.modalField}>
                     <Text style={styles.modalFieldLabel}>Mô tả kết quả</Text>
-                    <Text
-                      style={[styles.modalFieldValue, styles.descriptionText]}
-                    >
+                    <Text style={[styles.modalFieldValue, styles.descriptionText]}>
                       {selectedRecord.resultDescription || "Không có mô tả"}
                     </Text>
                   </View>
@@ -755,7 +818,7 @@ const MedicalRecords: React.FC = () => {
                   <View style={styles.modalSectionHeader}>
                     <Ionicons name="heart-outline" size={20} color="#0D9488" />
                     <Text style={styles.modalSectionTitle}>
-                      Dấu Hiệu Sinh Tồn
+                      Chỉ Số Cơ Thể
                     </Text>
                   </View>
 
@@ -825,18 +888,14 @@ const MedicalRecords: React.FC = () => {
 
                   <View style={styles.modalFieldsRow}>
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>
-                        Loại mẫu xét nghiệm
-                      </Text>
+                      <Text style={styles.modalFieldLabel}>Loại mẫu xét nghiệm</Text>
                       <Text style={styles.modalFieldValue}>
                         {selectedRecord.sampleType || "Chưa có"}
                       </Text>
                     </View>
 
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>
-                        Phương pháp xét nghiệm
-                      </Text>
+                      <Text style={styles.modalFieldLabel}>Phương pháp xét nghiệm</Text>
                       <Text style={styles.modalFieldValue}>
                         {selectedRecord.testMethod || "Chưa có"}
                       </Text>
@@ -845,45 +904,162 @@ const MedicalRecords: React.FC = () => {
 
                   <View style={styles.modalFieldsRow}>
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>Loại kết quả</Text>
+                      <Text style={styles.modalFieldLabel}>Người thực hiện</Text>
                       <Text style={styles.modalFieldValue}>
-                        {selectedRecord.resultType || "Chưa có"}
+                        {selectedRecord.testerName || "Chưa có"}
                       </Text>
                     </View>
 
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>
-                        Kết quả xét nghiệm
-                      </Text>
+                      <Text style={styles.modalFieldLabel}>Kết quả xét nghiệm</Text>
+                      <View style={[
+                        styles.resultBadge,
+                        selectedRecord.testResult === 'positive' ? styles.resultPositive :
+                        selectedRecord.testResult === 'negative' ? styles.resultNegative :
+                        styles.resultPending
+                      ]}>
+                        <Text style={styles.resultBadgeText}>
+                          {formatTestResult(selectedRecord.testResult) || "Chưa có"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalFieldsRow}>
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Đơn vị đo</Text>
                       <Text style={styles.modalFieldValue}>
-                        {selectedRecord.testResult || "Chưa có"}
+                        {selectedRecord.unit || "Chưa có"}
+                      </Text>
+                    </View>
+
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Tải lượng virus</Text>
+                      <Text style={styles.modalFieldValue}>
+                        {selectedRecord.viralLoad 
+                          ? `${selectedRecord.viralLoad} ${selectedRecord.unit || 'copies/mL'}`
+                          : "Chưa có"}
                       </Text>
                     </View>
                   </View>
 
                   <View style={styles.modalFieldsRow}>
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>
-                        Giá trị xét nghiệm
-                      </Text>
+                      <Text style={styles.modalFieldLabel}>Khoảng tham chiếu VL</Text>
                       <Text style={styles.modalFieldValue}>
-                        {selectedRecord.testValue
-                          ? `${selectedRecord.testValue} ${
-                              selectedRecord.unit || ""
-                            }`.trim()
+                        {selectedRecord.viralLoadReference || "Chưa có"}
+                      </Text>
+                    </View>
+
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Diễn giải tải lượng virus</Text>
+                      <View style={[
+                        styles.resultBadge,
+                        selectedRecord.viralLoadInterpretation === 'undetectable' ? styles.resultGood :
+                        selectedRecord.viralLoadInterpretation === 'low' ? styles.resultWarning :
+                        selectedRecord.viralLoadInterpretation === 'high' ? styles.resultDanger :
+                        styles.resultNeutral
+                      ]}>
+                        <Text style={styles.resultBadgeText}>
+                          {formatViralLoadInterpretation(selectedRecord.viralLoadInterpretation) || "Chưa có"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalFieldsRow}>
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Số lượng CD4</Text>
+                      <Text style={styles.modalFieldValue}>
+                        {selectedRecord.cd4Count 
+                          ? `${selectedRecord.cd4Count} cells/mm³`
                           : "Chưa có"}
                       </Text>
                     </View>
 
                     <View style={styles.modalFieldHalf}>
-                      <Text style={styles.modalFieldLabel}>
-                        Khoảng tham chiếu
-                      </Text>
+                      <Text style={styles.modalFieldLabel}>Khoảng tham chiếu CD4</Text>
                       <Text style={styles.modalFieldValue}>
-                        {selectedRecord.referenceRange || "Chưa có"}
+                        {selectedRecord.cd4Reference || "Chưa có"}
                       </Text>
                     </View>
                   </View>
+
+                  <View style={styles.modalFieldsRow}>
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Diễn giải CD4</Text>
+                      <View style={[
+                        styles.resultBadge,
+                        selectedRecord.cd4Interpretation === 'normal' ? styles.resultGood :
+                        selectedRecord.cd4Interpretation === 'low' ? styles.resultWarning :
+                        selectedRecord.cd4Interpretation === 'very_low' ? styles.resultDanger :
+                        styles.resultNeutral
+                      ]}>
+                        <Text style={styles.resultBadgeText}>
+                          {formatCD4Interpretation(selectedRecord.cd4Interpretation) || "Chưa có"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Kháng nguyên P24</Text>
+                      <View style={[
+                        styles.resultBadge,
+                        selectedRecord.p24Antigen > 0 ? styles.resultDanger : styles.resultGood
+                      ]}>
+                        <Text style={styles.resultBadgeText}>
+                          {selectedRecord.p24Antigen !== undefined
+                            ? (selectedRecord.p24Antigen > 0
+                              ? `Dương tính (${selectedRecord.p24Antigen})`
+                              : "Âm tính")
+                            : "Chưa có"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalFieldsRow}>
+                    <View style={styles.modalFieldHalf}>
+                      <Text style={styles.modalFieldLabel}>Kháng thể HIV</Text>
+                      <View style={[
+                        styles.resultBadge,
+                        selectedRecord.hivAntibody > 0 ? styles.resultDanger : styles.resultGood
+                      ]}>
+                        <Text style={styles.resultBadgeText}>
+                          {selectedRecord.hivAntibody !== undefined
+                            ? (selectedRecord.hivAntibody > 0
+                              ? `Dương tính (${selectedRecord.hivAntibody})`
+                              : "Âm tính")
+                            : "Chưa có"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Co-infections section */}
+                  {selectedRecord.coInfections && selectedRecord.coInfections.length > 0 && (
+                    <View style={styles.modalField}>
+                      <View style={styles.warningHeader}>
+                        <Ionicons
+                          name="warning-outline"
+                          size={16}
+                          color="#F59E0B"
+                        />
+                        <Text style={styles.modalFieldLabel}>Các bệnh nhiễm kèm</Text>
+                      </View>
+                      <View style={[styles.warningContainer, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }]}>
+                        <View style={styles.coInfectionsList}>
+                          {selectedRecord.coInfections.map((infection: string, index: number) => (
+                            <View key={index} style={styles.coInfectionItem}>
+                              <Text style={[styles.warningText, { color: '#92400E' }]}>
+                                {infection}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  )}
                 </View>
 
                 {/* Booking Information */}
@@ -982,6 +1158,49 @@ const MedicalRecords: React.FC = () => {
                       </View>
                     )}
 
+                    {/* Thêm vào sau phần doctorName */}
+                    {selectedRecord.bookingId.serviceId && (
+                      <View style={styles.modalField}>
+                        <Text style={styles.modalFieldLabel}>Dịch vụ</Text>
+                        <Text style={styles.modalFieldValue}>
+                          {selectedRecord.bookingId.serviceId.serviceName ||
+                            selectedRecord.serviceId?.serviceName ||
+                            "Chưa có"}
+                        </Text>
+                      </View>
+                    )}
+
+                    {selectedRecord.bookingId.serviceId && (
+                      <View style={styles.modalField}>
+                        <Text style={styles.modalFieldLabel}>Mô tả dịch vụ</Text>
+                        <Text style={[styles.modalFieldValue, styles.descriptionText]}>
+                          {selectedRecord.bookingId.serviceId.serviceDescription ||
+                            selectedRecord.serviceId?.serviceDescription ||
+                            "Chưa có"}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={styles.modalField}>
+                      <Text style={styles.modalFieldLabel}>Thời lượng</Text>
+                      <Text style={styles.modalFieldValue}>
+                        {selectedRecord.bookingId.startTime && selectedRecord.bookingId.endTime
+                          ? (() => {
+                              const bookingDate = selectedRecord.bookingId.bookingDate;
+                              const datePart = new Date(bookingDate).toISOString().split("T")[0];
+                              const start = new Date(`${datePart}T${selectedRecord.bookingId.startTime}:00`);
+                              const end = new Date(`${datePart}T${selectedRecord.bookingId.endTime}:00`);
+                              if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                                return "Không hợp lệ";
+                              }
+                              const diffMs = end.getTime() - start.getTime();
+                              const diffMinutes = Math.round(diffMs / 60000);
+                              return `${diffMinutes} phút`;
+                            })()
+                          : "Chưa xác định"}
+                      </Text>
+                    </View>
+
                     {selectedRecord.bookingId.notes && (
                       <View style={styles.modalField}>
                         <Text style={styles.modalFieldLabel}>Ghi chú</Text>
@@ -1038,6 +1257,31 @@ const MedicalRecords: React.FC = () => {
                       <Text style={[styles.modalFieldValue, styles.boldText]}>
                         {selectedRecord.arvregimenId.arvName || "Chưa có"}
                       </Text>
+                    </View>
+
+                    {/* Thêm mã phác đồ */}
+                    <View style={styles.modalField}>
+                      <Text style={styles.modalFieldLabel}>Mã phác đồ</Text>
+                      <Text style={[styles.modalFieldValue, styles.codeText]}>
+                        {selectedRecord.arvregimenId.regimenCode || "Chưa có"}
+                      </Text>
+                    </View>
+
+                    {/* Thêm tuyến điều trị và đối tượng */}
+                    <View style={styles.modalFieldsRow}>
+                      <View style={styles.modalFieldHalf}>
+                        <Text style={styles.modalFieldLabel}>Tuyến điều trị</Text>
+                        <Text style={styles.modalFieldValue}>
+                          {selectedRecord.arvregimenId.treatmentLine || "Chưa có"}
+                        </Text>
+                      </View>
+
+                      <View style={styles.modalFieldHalf}>
+                        <Text style={styles.modalFieldLabel}>Đối tượng</Text>
+                        <Text style={styles.modalFieldValue}>
+                          {selectedRecord.arvregimenId.recommendedFor || "Chưa có"}
+                        </Text>
+                      </View>
                     </View>
 
                     {selectedRecord.medicationTime && (
@@ -1145,7 +1389,7 @@ const MedicalRecords: React.FC = () => {
                           <View style={styles.warningContainer}>
                             {selectedRecord.arvregimenId.contraindications.map(
                               (item: string, index: number) => (
-                                <View key={index} style={styles.warningItem}>
+                                <View key={index} style={styles.coInfectionItem}>
                                   <Text style={styles.warningText}>{item}</Text>
                                 </View>
                               )
@@ -1178,7 +1422,7 @@ const MedicalRecords: React.FC = () => {
                           >
                             {selectedRecord.arvregimenId.sideEffects.map(
                               (effect: string, index: number) => (
-                                <View key={index} style={styles.warningItem}>
+                                <View key={index} style={styles.coInfectionItem}>
                                   <Text
                                     style={[
                                       styles.warningText,
@@ -1768,25 +2012,16 @@ const styles = StyleSheet.create({
   warningHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 4,
   },
   warningContainer: {
-    backgroundColor: "#FEF3C7",
+    padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#F59E0B",
-    overflow: "hidden",
-  },
-  warningItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#FDE68A",
   },
   warningText: {
     fontSize: 14,
-    color: "#92400E",
-    fontWeight: "500",
   },
   modalFooter: {
     flexDirection: "row",
@@ -1877,6 +2112,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  resultBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+  },
+  resultBadgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  resultPositive: {
+    backgroundColor: '#FEE2E2',
+  },
+  resultNegative: {
+    backgroundColor: '#DCFCE7',
+  },
+  resultPending: {
+    backgroundColor: '#FEF3C7',
+  },
+  resultGood: {
+    backgroundColor: '#DCFCE7',
+  },
+  resultWarning: {
+    backgroundColor: '#FEF3C7',
+  },
+  resultDanger: {
+    backgroundColor: '#FEE2E2',
+  },
+  resultNeutral: {
+    backgroundColor: '#F3F4F6',
+  },
+  coInfectionsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  coInfectionItem: {
+    backgroundColor: '#FFEDD5',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
 });
 
