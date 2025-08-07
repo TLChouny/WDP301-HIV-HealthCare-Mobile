@@ -133,31 +133,35 @@ const Home: React.FC = () => {
     try {
       if (user) {
         const bookings = await getBookingsByUserId(user._id);
-        const hasPendingOnlineBooking = bookings.some(
-          (b) =>
-            b.serviceId.serviceName === "Tư vấn trực tuyến" &&
-            b.status !== "completed"
-        );
+        
+        // Kiểm tra nếu có booking nào
+        if (bookings && bookings.length > 0) {
+          const hasPendingOnlineBooking = bookings.some(
+            (b) =>
+              b.serviceId.serviceName === "Tư vấn trực tuyến" &&
+              b.status !== "completed"
+          );
 
-        if (hasPendingOnlineBooking) {
-          Toast.show({
-            type: "error",
-            text1: "Lỗi",
-            text2:
-              "Bạn đã có lịch tư vấn trực tuyến chưa hoàn tất. Vui lòng hoàn tất trước khi đặt mới.",
-          });
-          return;
+          if (hasPendingOnlineBooking) {
+            Toast.show({
+              type: "error",
+              text1: "Lỗi",
+              text2:
+                "Bạn đã có lịch tư vấn trực tuyến chưa hoàn tất. Vui lòng hoàn tất trước khi đặt mới.",
+            });
+            return;
+          }
         }
+        // Nếu không có booking nào hoặc không có booking tư vấn trực tuyến pending, cho phép book
       }
       navigation.push("AppointmentBooking", {
         serviceId: "6884c1b3dc415d604a31d5f5",
       });
     } catch (error) {
       console.error("❌ Error checking bookings:", error);
-      Toast.show({
-        type: "error",
-        text1: "Lỗi",
-        text2: "Không thể kiểm tra lịch hẹn. Vui lòng thử lại sau.",
+      // Nếu có lỗi khi check booking, vẫn cho phép book tư vấn trực tuyến
+      navigation.push("AppointmentBooking", {
+        serviceId: "6884c1b3dc415d604a31d5f5",
       });
     }
   };
